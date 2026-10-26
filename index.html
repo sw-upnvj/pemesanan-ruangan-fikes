@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pemesanan Kelas FIKES UPNVJ</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- HALAMAN LOGIN -->
+  <div id="loginPage" class="page-section">
+    <div class="login-box">
+      <h2>Login FIKES UPNVJ</h2>
+      <p>Gunakan akun Google Anda untuk masuk.</p>
+      <div id="g_id_onload"
+           data-client_id="25545982602-98bli48phvd6ao2dla4r07qqh8uhfbue.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large"></div>
+      <p id="loginError" class="error-text" style="display:none;"></p>
+    </div>
+  </div>
+
+  <!-- HALAMAN UTAMA -->
+  <div id="mainPage" class="page-section" style="display:none;">
+    <header class="app-header">
+      <h1>Pemesanan Kelas</h1>
+      <p class="subtitle">FIKES UPNVJ</p>
+      <p id="userBadge" class="user-badge"></p>
+    </header>
+
+    <main class="container">
+      <section class="control-card">
+        <label>Pilih Tanggal</label>
+        <input type="date" id="datePicker" class="input-date">
+        <div class="quick-dates">
+          <button type="button" class="btn-quick" data-offset="0">Hari Ini</button>
+          <button type="button" class="btn-quick" data-offset="1">Besok</button>
+          <button type="button" class="btn-quick" data-offset="2">Lusa</button>
+        </div>
+        <div class="time-range">
+          <div class="time-field">
+            <label>Jam Mulai</label>
+            <input type="time" id="startTime" class="input-time" min="07:00" max="21:00" value="08:00">
+          </div>
+          <div class="time-field">
+            <label>Jam Selesai</label>
+            <input type="time" id="endTime" class="input-time" min="07:00" max="21:00" value="10:00">
+          </div>
+        </div>
+      </section>
+
+      <section class="room-section">
+        <h2 class="section-title">Status Ruangan</h2>
+        <div id="roomGrid" class="room-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL FORM PEMESANAN -->
+  <div id="bookingModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2 id="modalRoomName" class="modal-title">Nama Ruangan</h2>
+      <p id="modalDateTime" class="modal-subtitle">Tanggal & Jam</p>
+      
+      <form id="bookingForm">
+        <input type="hidden" id="formRoomId">
+        <input type="hidden" id="formDate">
+        <input type="hidden" id="formStart">
+        <input type="hidden" id="formEnd">
+        
+        <div class="form-group">
+          <label>Nama Kegiatan *</label>
+          <input type="text" id="formActivity" required placeholder="Contoh: Perkuliahan, Rapat Dosen">
+        </div>
+
+        <div class="form-group">
+          <label>Mata Kuliah / Acara</label>
+          <input type="text" id="formCourse" placeholder="Contoh: Pemrograman Web">
+        </div>
+
+        <div class="form-group">
+          <label>Nama Dosen / PIC</label>
+          <input type="text" id="formLecturer" placeholder="Nama lengkap">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label>No. HP / WA PIC *</label>
+            <input type="tel" id="formPhone" required placeholder="08123456789">
+          </div>
+          <div class="form-group half">
+            <label>Jumlah Peserta</label>
+            <input type="number" id="formCount" placeholder="30">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Catatan Khusus</label>
+          <textarea id="formNotes" rows="2" placeholder="Butuh proyektor, sound system, dll"></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" onclick="closeModal()" class="btn-cancel">Batal</button>
+          <button type="button" onclick="submitBooking()" class="btn-submit">Pesan Ruangan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <!-- MODAL DETAIL RUANGAN (BARU) -->
+<div id="detailModal" class="modal-overlay">
+  <div class="modal-content detail-modal">
+    <div class="detail-header">
+      <h2 id="detailRoomName" class="modal-title">Nama Ruangan</h2>
+      <p id="detailDateTime" class="modal-subtitle">Tanggal & Jam</p>
+      <button onclick="closeDetailModal()" class="close-btn">✕</button>
+    </div>
+    
+    <div class="detail-body">
+      <div class="detail-item">
+        <span class="detail-label">📚 Kegiatan</span>
+        <span class="detail-value" id="detailActivity">-</span>
+      </div>
+      
+      <div class="detail-item">
+        <span class="detail-label">📖 Mata Kuliah / Acara</span>
+        <span class="detail-value" id="detailCourse">-</span>
+      </div>
+      
+      <div class="detail-item">
+        <span class="detail-label">👨‍ Dosen / PIC</span>
+        <span class="detail-value" id="detailLecturer">-</span>
+      </div>
+      
+      <div class="detail-item">
+        <span class="detail-label">📞 Kontak PIC</span>
+        <span class="detail-value" id="detailContact">-</span>
+      </div>
+      
+      <div class="detail-item">
+        <span class="detail-label">📧 Email Pemesan</span>
+        <span class="detail-value" id="detailEmail">-</span>
+      </div>
+      
+      <div class="detail-item">
+        <span class="detail-label">📝 Catatan</span>
+        <span class="detail-value" id="detailNotes">-</span>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button onclick="closeDetailModal()" class="btn-cancel">Tutup</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
