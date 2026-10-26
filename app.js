@@ -9,6 +9,9 @@ const ROOMS = [
   { id: "podcast", name: "Ruang Podcast" }
 ];
 
+const ALLOWED_DOMAIN = "upnvj.ac.id";
+
+// Handle response dari Google Sign-In
 window.handleCredentialResponse = async function(response) {
   const idToken = response.credential;
   const loginError = document.getElementById("loginError");
@@ -18,6 +21,27 @@ window.handleCredentialResponse = async function(response) {
   loginError.style.display = "block";
 
   try {
+    // Decode token untuk dapat email
+    const payload = JSON.parse(atob(idToken.split('.')[1]));
+    const email = payload.email;
+    
+    // Validasi domain UPNVJ
+    if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
+      loginError.innerText = "Hanya email @upnvj.ac.id yang diizinkan.";
+      loginError.style.color = "#c0392b";
+      return;
+    }
+
+    // Cek apakah user sudah terdaftar
+    const checkRes = await fetch(API_URL + "?action=checkUser&email=" + encodeURIComponent(email));
+    const checkData = await checkRes.json();
+    
+    if (checkData.success && !checkData.registered) {
+      showRegisterPage(email);
+      return;
+    }
+
+    // User sudah terdaftar → lanjut login
     const formData = new URLSearchParams();
     formData.append("action", "login");
     formData.append("id_token", idToken);
@@ -31,7 +55,7 @@ window.handleCredentialResponse = async function(response) {
       
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("mainPage").style.display = "block";
-      document.getElementById("userBadge").innerText = "Login: " + data.name + " (" + data.role + ")";
+      document.getElementById("userBadge").innerText = `${data.name} (${data.role} - ${data.prodi || '-'})`;
       
       await fetchBookings(); 
       initApp(); 
@@ -45,13 +69,77 @@ window.handleCredentialResponse = async function(response) {
   }
 };
 
+// Tampilkan halaman registrasi
+function showRegisterPage(email) {
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("registerPage").style.display = "flex";
+  document.getElementById("regEmail").value = email;
+}
+
+// Submit registrasi
+async function submitRegister() {
+  const email = document.getElementById("regEmail").value;
+  const nama = document.getElementById("regNama").value.trim();
+  const role = document.getElementById("regRole").value;
+  const prodi = document.getElementById("regProdi").value;
+  
+  const errorEl = document.getElementById("registerError");
+  const successEl = document.getElementById("registerSuccess");
+  
+  errorEl.style.display = "none";
+  successEl.style.display = "none";
+  
+  if (!nama || !role || !prodi) {
+    errorEl.innerText = "Semua field harus diisi.";
+    errorEl.style.display = "block";
+    return;
+  }
+  
+  const formData = new URLSearchParams();
+  formData.append("action", "register");
+  formData.append("email", email);
+  formData.append("nama", nama);
+  formData.append("role", role);
+  formData.append("prodi", prodi);
+  
+  try {
+    const res = await fetch(API_URL, { method: "POST", body: formData });
+    const data = await res.json();
+    
+    if (data.success) {
+      successEl.innerText = data.message + " Mengalihkan ke halaman login...";
+      successEl.style.display = "block";
+      
+      setTimeout(() => {
+        document.getElementById("registerPage").style.display = "none";
+        document.getElementById("loginPage").style.display = "flex";
+        document.getElementById("loginError").style.display = "none";
+        
+        // Reset form
+        document.getElementById("regNama").value = "";
+        document.getElementById("regRole").value = "";
+        document.getElementById("regProdi").value = "";
+      }, 2000);
+    } else {
+      errorEl.innerText = data.message;
+      errorEl.style.display = "block";
+    }
+  } catch (err) {
+    errorEl.innerText = "Gagal terhubung ke server.";
+    errorEl.style.display = "block";
+  }
+}
+
+// Auto-login jika ada session tersimpan
 window.addEventListener("DOMContentLoaded", () => {
   const savedUser = localStorage.getItem("userData");
   if (savedUser) {
     currentUser = JSON.parse(savedUser);
     document.getElementById("loginPage").style.display = "none";
     document.getElementById("mainPage").style.display = "block";
-    document.getElementById("userBadge").innerText = "Login: " + currentUser.name + " (" + currentUser.role + ")";
+    // Tambahkan fallback jika prodi undefined
+    document.getElementById("userBadge").innerText = 
+      `${currentUser.name} (${currentUser.role} - ${currentUser.prodi || '-'})`;
     fetchBookings().then(() => initApp());
   }
 });
@@ -142,7 +230,6 @@ function renderRooms() {
     if (conflict) {
       card.innerHTML = `<div class="room-name">${room.name}</div>
                         <div class="room-status"><strong>Dipakai:</strong> ${conflict.activity}<br><small>(${conflict.email})</small><br><small>👁️ Klik untuk detail</small></div>`;
-      // Tambahkan klik untuk lihat detail
       card.addEventListener("click", () => openDetailModal(conflict, room));
     } else {
       card.innerHTML = `<div class="room-name">${room.name}</div>
@@ -151,28 +238,6 @@ function renderRooms() {
     }
     grid.appendChild(card);
   });
-}
-
-// FUNGSI BARU: Buka Modal Detail Ruangan
-function openDetailModal(booking, room) {
-  const dateObj = new Date(booking.date + "T00:00:00");
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const dateStr = dateObj.toLocaleDateString('id-ID', options);
-
-  document.getElementById("detailRoomName").innerText = room.name;
-  document.getElementById("detailDateTime").innerText = dateStr + " • " + booking.start + " - " + booking.end;
-  document.getElementById("detailActivity").innerText = booking.activity;
-  document.getElementById("detailCourse").innerText = booking.courseName;
-  document.getElementById("detailLecturer").innerText = booking.lecturerName;
-  document.getElementById("detailContact").innerText = booking.contactPerson + " (" + booking.contactPhone + ")";
-  document.getElementById("detailEmail").innerText = booking.email;
-  document.getElementById("detailNotes").innerText = booking.notes;
-
-  document.getElementById("detailModal").style.display = "flex";
-}
-
-function closeDetailModal() {
-  document.getElementById("detailModal").style.display = "none";
 }
 
 function openModal(room) {
@@ -192,7 +257,9 @@ function openModal(room) {
   document.getElementById("formStart").value = start;
   document.getElementById("formEnd").value = end;
   
-  // Reset form
+  // OTOMATIS ISI NAMA DARI DATA USER
+  document.getElementById("formContactPerson").value = currentUser.name + " (" + currentUser.role + ")";
+  
   document.getElementById("formActivity").value = "";
   document.getElementById("formCourse").value = "";
   document.getElementById("formLecturer").value = "";
@@ -211,7 +278,6 @@ async function submitBooking() {
   const btnSubmit = document.querySelector('.btn-submit');
   const originalText = btnSubmit.innerText;
   
-  // Validasi sederhana
   const activity = document.getElementById("formActivity").value.trim();
   const phone = document.getElementById("formPhone").value.trim();
   if(!activity || !phone) {
@@ -247,7 +313,7 @@ async function submitBooking() {
     const result = await res.json();
 
     if (result.success) {
-      alert("Pemesanan Berhasil! Email konfirmasi akan dikirim.");
+      alert("Pemesanan Berhasil!");
       closeModal();
       await fetchBookings(); 
     } else {
@@ -259,4 +325,59 @@ async function submitBooking() {
     btnSubmit.innerText = originalText;
     btnSubmit.disabled = false;
   }
+}
+
+function logout() {
+  // Konfirmasi sebelum logout
+  if (!confirm("Yakin ingin logout dari sistem?")) return;
+  
+  // 1. Hapus data user dari localStorage
+  localStorage.removeItem("userData");
+  
+  // 2. Reset variabel currentUser
+  currentUser = null;
+  liveBookings = [];
+  
+  // 3. Sembunyikan halaman utama
+  document.getElementById("mainPage").style.display = "none";
+  
+  // 4. Tampilkan halaman login
+  document.getElementById("loginPage").style.display = "flex";
+  
+  // 5. Reset pesan error login
+  const loginError = document.getElementById("loginError");
+  loginError.style.display = "none";
+  loginError.innerText = "";
+  
+  // 6. Reset Google Sign-In state (agar bisa login dengan akun berbeda)
+  if (window.google && google.accounts && google.accounts.id) {
+    try {
+      google.accounts.id.disableAutoSelect();
+    } catch (err) {
+      console.log("Google sign-in reset:", err);
+    }
+  }
+  
+  console.log("✅ User berhasil logout");
+}
+
+function openDetailModal(booking, room) {
+  const dateObj = new Date(booking.date + "T00:00:00");
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const dateStr = dateObj.toLocaleDateString('id-ID', options);
+
+  document.getElementById("detailRoomName").innerText = room.name;
+  document.getElementById("detailDateTime").innerText = dateStr + " • " + booking.start + " - " + booking.end;
+  document.getElementById("detailActivity").innerText = booking.activity;
+  document.getElementById("detailCourse").innerText = booking.courseName;
+  document.getElementById("detailLecturer").innerText = booking.lecturerName;
+  document.getElementById("detailContact").innerText = booking.contactPerson + " (" + booking.contactPhone + ")";
+  document.getElementById("detailEmail").innerText = booking.email;
+  document.getElementById("detailNotes").innerText = booking.notes;
+
+  document.getElementById("detailModal").style.display = "flex";
+}
+
+function closeDetailModal() {
+  document.getElementById("detailModal").style.display = "none";
 }

@@ -13,23 +13,91 @@
   <div id="loginPage" class="page-section">
     <div class="login-box">
       <h2>Login FIKES UPNVJ</h2>
-      <p>Gunakan akun Google Anda untuk masuk.</p>
+      <p>Gunakan akun Google <strong>@upnvj.ac.id</strong> untuk masuk.</p>
+      
       <div id="g_id_onload"
            data-client_id="25545982602-98bli48phvd6ao2dla4r07qqh8uhfbue.apps.googleusercontent.com"
            data-callback="handleCredentialResponse"
            data-auto_prompt="false">
       </div>
-      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large"></div>
+      <div class="g_id_signin" 
+           data-type="standard" 
+           data-shape="rectangular" 
+           data-theme="outline" 
+           data-text="signin_with" 
+           data-size="large">
+      </div>
+      
       <p id="loginError" class="error-text" style="display:none;"></p>
+    </div>
+  </div>
+
+  <!-- HALAMAN REGISTRASI (BARU) -->
+  <div id="registerPage" class="page-section" style="display:none;">
+    <div class="login-box register-box">
+      <h2>Registrasi Akun Baru</h2>
+      <p>Email Anda belum terdaftar. Silakan lengkapi data berikut.</p>
+      
+      <form id="registerForm">
+        <div class="form-group">
+          <label>Email (Otomatis)</label>
+          <input type="email" id="regEmail" readonly class="input-readonly">
+        </div>
+        
+        <div class="form-group">
+          <label>Nama Lengkap *</label>
+          <input type="text" id="regNama" required placeholder="Masukkan nama lengkap">
+        </div>
+        
+        <div class="form-group">
+          <label>Kategori User *</label>
+          <select id="regRole" required>
+            <option value="">-- Pilih Kategori --</option>
+            <option value="Dosen">Dosen</option>
+            <option value="Tendik">Tendik</option>
+            <option value="Mahasiswa">Mahasiswa</option>
+            <option value="Dosen Tidak Tetap">Dosen Tidak Tetap</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Program Studi *</label>
+          <select id="regProdi" required>
+            <option value="">-- Pilih Program Studi / Unit --</option>
+            <option value="Tendik">Tendik (Tenaga Kependidikan)</option>
+            <option value="S1 Keperawatan">S1 Keperawatan</option>
+            <option value="S1 Gizi">S1 Gizi</option>
+            <option value="S1 Kesehatan Masyarakat">S1 Kesehatan Masyarakat</option>
+            <option value="S1 Fisioterapi">S1 Fisioterapi</option>
+            <option value="D3 Keperawatan">D3 Keperawatan</option>
+            <option value="D3 Fisioterapi">D3 Fisioterapi</option>
+            <option value="Profesi Ners">Profesi Ners</option>
+            <option value="S2 Kesehatan Masyarakat">S2 Kesehatan Masyarakat</option>
+            <option value="S2 Keperawatan">S2 Keperawatan</option>
+          </select>
+        </div>
+        
+        <button type="button" onclick="submitRegister()" class="btn-primary">Daftar</button>
+      </form>
+      
+      <p id="registerError" class="error-text" style="display:none;"></p>
+      <p id="registerSuccess" class="success-text" style="display:none;"></p>
     </div>
   </div>
 
   <!-- HALAMAN UTAMA -->
   <div id="mainPage" class="page-section" style="display:none;">
     <header class="app-header">
-      <h1>Pemesanan Kelas</h1>
-      <p class="subtitle">FIKES UPNVJ</p>
-      <p id="userBadge" class="user-badge"></p>
+      <div class="header-content">
+        <div>
+          <h1>Pemesanan Kelas</h1>
+          <p class="subtitle">FIKES UPNVJ</p>
+          <p id="userBadge" class="user-badge"></p>
+        </div>
+        <button onclick="logout()" class="btn-logout" title="Keluar dari akun">
+          🚪 Logout
+        </button>
+      </div>
     </header>
 
     <main class="container">
@@ -73,6 +141,11 @@
         <input type="hidden" id="formEnd">
         
         <div class="form-group">
+          <label>Nama Pemesan (Otomatis)</label>
+          <input type="text" id="formContactPerson" readonly class="input-readonly">
+        </div>
+        
+        <div class="form-group">
           <label>Nama Kegiatan *</label>
           <input type="text" id="formActivity" required placeholder="Contoh: Perkuliahan, Rapat Dosen">
         </div>
@@ -83,8 +156,8 @@
         </div>
 
         <div class="form-group">
-          <label>Nama Dosen / PIC</label>
-          <input type="text" id="formLecturer" placeholder="Nama lengkap">
+          <label>Nama Dosen Pengampu</label>
+          <input type="text" id="formLecturer" placeholder="Nama lengkap dosen">
         </div>
 
         <div class="form-row">
@@ -111,54 +184,48 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
-
-  <!-- MODAL DETAIL RUANGAN (BARU) -->
-<div id="detailModal" class="modal-overlay">
-  <div class="modal-content detail-modal">
-    <div class="detail-header">
-      <h2 id="detailRoomName" class="modal-title">Nama Ruangan</h2>
-      <p id="detailDateTime" class="modal-subtitle">Tanggal & Jam</p>
-      <button onclick="closeDetailModal()" class="close-btn">✕</button>
-    </div>
-    
-    <div class="detail-body">
-      <div class="detail-item">
-        <span class="detail-label">📚 Kegiatan</span>
-        <span class="detail-value" id="detailActivity">-</span>
+  <!-- MODAL DETAIL RUANGAN -->
+  <div id="detailModal" class="modal-overlay">
+    <div class="modal-content detail-modal">
+      <div class="detail-header">
+        <h2 id="detailRoomName" class="modal-title">Nama Ruangan</h2>
+        <p id="detailDateTime" class="modal-subtitle">Tanggal & Jam</p>
+        <button onclick="closeDetailModal()" class="close-btn">✕</button>
       </div>
       
-      <div class="detail-item">
-        <span class="detail-label">📖 Mata Kuliah / Acara</span>
-        <span class="detail-value" id="detailCourse">-</span>
+      <div class="detail-body">
+        <div class="detail-item">
+          <span class="detail-label">📚 Kegiatan</span>
+          <span class="detail-value" id="detailActivity">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label"> Mata Kuliah / Acara</span>
+          <span class="detail-value" id="detailCourse">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">👨‍🏫 Dosen / PIC</span>
+          <span class="detail-value" id="detailLecturer">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label"> Kontak PIC</span>
+          <span class="detail-value" id="detailContact">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label"> Email Pemesan</span>
+          <span class="detail-value" id="detailEmail">-</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">📝 Catatan</span>
+          <span class="detail-value" id="detailNotes">-</span>
+        </div>
       </div>
       
-      <div class="detail-item">
-        <span class="detail-label">👨‍ Dosen / PIC</span>
-        <span class="detail-value" id="detailLecturer">-</span>
+      <div class="modal-actions">
+        <button onclick="closeDetailModal()" class="btn-cancel">Tutup</button>
       </div>
-      
-      <div class="detail-item">
-        <span class="detail-label">📞 Kontak PIC</span>
-        <span class="detail-value" id="detailContact">-</span>
-      </div>
-      
-      <div class="detail-item">
-        <span class="detail-label">📧 Email Pemesan</span>
-        <span class="detail-value" id="detailEmail">-</span>
-      </div>
-      
-      <div class="detail-item">
-        <span class="detail-label">📝 Catatan</span>
-        <span class="detail-value" id="detailNotes">-</span>
-      </div>
-    </div>
-    
-    <div class="modal-actions">
-      <button onclick="closeDetailModal()" class="btn-cancel">Tutup</button>
     </div>
   </div>
-</div>
 
+  <script src="app.js"></script>
 </body>
 </html>
