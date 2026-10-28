@@ -90,7 +90,7 @@
     <header class="app-header">
       <div class="header-content">
         <div>
-          <h1>Pemesanan Kelas</h1>
+          <h1>Pemesanan Ruangan</h1>
           <p class="subtitle">FIKES UPNVJ</p>
           <p id="userBadge" class="user-badge"></p>
         </div>
@@ -128,7 +128,7 @@
     </main>
   </div>
 
-  <!-- MODAL FORM PEMESANAN -->
+    <!-- MODAL FORM PEMESANAN -->
   <div id="bookingModal" class="modal-overlay">
     <div class="modal-content">
       <h2 id="modalRoomName" class="modal-title">Nama Ruangan</h2>
@@ -140,18 +140,20 @@
         <input type="hidden" id="formStart">
         <input type="hidden" id="formEnd">
         
+        <!-- PERBAIKAN: Input Nama Pemesan dikembalikan -->
         <div class="form-group">
           <label>Nama Pemesan (Otomatis)</label>
           <input type="text" id="formContactPerson" readonly class="input-readonly">
         </div>
-        
+
         <div class="form-group">
           <label>Nama Kegiatan *</label>
           <input type="text" id="formActivity" required placeholder="Contoh: Perkuliahan, Rapat Dosen">
         </div>
 
+        <!-- PERBAIKAN: Duplikat dihapus, label disesuaikan -->
         <div class="form-group">
-          <label>Mata Kuliah / Acara</label>
+          <label>Matakuliah / Kegiatan</label>
           <input type="text" id="formCourse" placeholder="Contoh: Pemrograman Web">
         </div>
 
@@ -220,7 +222,9 @@
         </div>
       </div>
       
-      <div class="modal-actions">
+     <div class="modal-actions">
+        <!-- Tombol Batalkan (Hanya muncul jika user adalah pemilik booking) -->
+        <button id="btnCancelBooking" onclick="confirmCancelBooking()" class="btn-danger" style="display:none;">Batalkan Booking</button>
         <button onclick="closeDetailModal()" class="btn-cancel">Tutup</button>
       </div>
     </div>

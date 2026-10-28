@@ -225,15 +225,30 @@ function renderRooms() {
     });
 
     const card = document.createElement("div");
-    card.className = "room-card " + (conflict ? "occupied" : "available");
+    
+    // Tentukan class CSS berdasarkan status
+    let cardClass = "available";
+    let statusLabel = "Tersedia — Klik untuk pesan";
+    
+    if (conflict) {
+      if (conflict.status === 'unconfirmed') {
+        cardClass = "unconfirmed"; // Warna Oranye/Kuning
+        statusLabel = `⚠️ Belum Konfirmasi: ${conflict.activity}`;
+      } else {
+        cardClass = "occupied"; // Warna Abu-abu
+        statusLabel = `Dipakai: ${conflict.activity}`;
+      }
+    }
+
+    card.className = "room-card " + cardClass;
 
     if (conflict) {
       card.innerHTML = `<div class="room-name">${room.name}</div>
-                        <div class="room-status"><strong>Dipakai:</strong> ${conflict.activity}<br><small>(${conflict.email})</small><br><small>👁️ Klik untuk detail</small></div>`;
+                        <div class="room-status"><strong>${statusLabel}</strong><br><small>(${conflict.email})</small><br><small>️ Klik untuk detail</small></div>`;
       card.addEventListener("click", () => openDetailModal(conflict, room));
     } else {
       card.innerHTML = `<div class="room-name">${room.name}</div>
-                        <div class="room-status">Tersedia — Klik untuk pesan</div>`;
+                        <div class="room-status">${statusLabel}</div>`;
       card.addEventListener("click", () => openModal(room));
     }
     grid.appendChild(card);
@@ -375,7 +390,62 @@ function openDetailModal(booking, room) {
   document.getElementById("detailEmail").innerText = booking.email;
   document.getElementById("detailNotes").innerText = booking.notes;
 
+  // LOGIKA BARU: Tampilkan tombol batal hanya jika user yang login adalah pemesan
+  const btnCancel = document.getElementById("btnCancelBooking");
+  if (currentUser && booking.email.toLowerCase() === currentUser.email.toLowerCase()) {
+    // Cek apakah status masih bisa dibatalkan
+    if (booking.status === 'confirmed' || booking.status === 'unconfirmed') {
+      btnCancel.style.display = "block";
+      btnCancel.dataset.id = booking.id; // Simpan ID booking di tombol
+    } else {
+      btnCancel.style.display = "none";
+    }
+  } else {
+    btnCancel.style.display = "none";
+  }
+
   document.getElementById("detailModal").style.display = "flex";
+}
+
+async function confirmCancelBooking() {
+  const btn = document.getElementById("btnCancelBooking");
+  const bookingId = btn.dataset.id;
+  
+  if (!bookingId) return;
+
+  // Konfirmasi bertingkat agar user tidak salah klik
+  const confirm1 = confirm("Apakah Anda yakin ingin MEMBATALKAN pemesanan ini?\n\nRuangan akan otomatis tersedia untuk pengguna lain.");
+  if (!confirm1) return;
+
+  const confirm2 = confirm("KONFIRMASI TERAKHIR:\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan pembatalan?");
+  if (!confirm2) return;
+
+  const originalText = btn.innerText;
+  btn.innerText = "Memproses...";
+  btn.disabled = true;
+
+  const formData = new URLSearchParams();
+  formData.append("action", "cancelBooking");
+  formData.append("id", bookingId);
+  formData.append("email", currentUser.email);
+
+  try {
+    const res = await fetch(API_URL, { method: "POST", body: formData });
+    const result = await res.json();
+
+    if (result.success) {
+      alert("✅ " + result.message);
+      closeDetailModal();
+      await fetchBookings(); // Refresh data ruangan
+    } else {
+      alert("❌ Gagal: " + result.message);
+    }
+  } catch (err) {
+    alert("Gagal terhubung ke server.");
+  } finally {
+    btn.innerText = originalText;
+    btn.disabled = false;
+  }
 }
 
 function closeDetailModal() {
