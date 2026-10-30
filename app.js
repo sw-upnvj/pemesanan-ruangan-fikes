@@ -401,34 +401,44 @@ function logout() {
 }
 
 function openDetailModal(booking, room) {
-  const dateObj = new Date(booking.date + "T00:00:00");
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const dateStr = dateObj.toLocaleDateString('id-ID', options);
+  try {
+    const dateObj = new Date(booking.date + "T00:00:00");
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const dateStr = dateObj.toLocaleDateString('id-ID', options);
 
-  document.getElementById("detailRoomName").innerText = room.name;
-  document.getElementById("detailDateTime").innerText = dateStr + " • " + booking.start + " - " + booking.end;
-  document.getElementById("detailActivity").innerText = booking.activity;
-  document.getElementById("detailCourse").innerText = booking.courseName;
-  document.getElementById("detailLecturer").innerText = booking.lecturerName;
-  document.getElementById("detailContact").innerText = booking.contactPerson + " (" + booking.contactPhone + ")";
-  document.getElementById("detailEmail").innerText = booking.email;
-  document.getElementById("detailNotes").innerText = booking.notes;
+    // Helper function untuk set text dengan aman
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.innerText = value || "-";
+    };
 
-  // LOGIKA BARU: Tampilkan tombol batal hanya jika user yang login adalah pemesan
-  const btnCancel = document.getElementById("btnCancelBooking");
-  if (currentUser && booking.email.toLowerCase() === currentUser.email.toLowerCase()) {
-    // Cek apakah status masih bisa dibatalkan
-    if (booking.status === 'confirmed' || booking.status === 'unconfirmed') {
-      btnCancel.style.display = "block";
-      btnCancel.dataset.id = booking.id; // Simpan ID booking di tombol
-    } else {
+    setText("detailRoomName", room.name);
+    setText("detailDateTime", dateStr + " • " + booking.start + " - " + booking.end);
+    setText("detailActivity", booking.activity);
+    setText("detailCourse", booking.courseName);
+    setText("detailLecturer", booking.lecturerName);
+    setText("detailContact", booking.contactPerson + " (" + booking.contactPhone + ")");
+    setText("detailEmail", booking.email);
+    setText("detailNotes", booking.notes);
+
+    // Tampilkan tombol batal hanya jika user yang login adalah pemesan
+    const btnCancel = document.getElementById("btnCancelBooking");
+    if (btnCancel && currentUser && booking.email.toLowerCase() === currentUser.email.toLowerCase()) {
+      if (booking.status === 'confirmed' || booking.status === 'unconfirmed') {
+        btnCancel.style.display = "block";
+        btnCancel.dataset.id = booking.id;
+      } else {
+        btnCancel.style.display = "none";
+      }
+    } else if (btnCancel) {
       btnCancel.style.display = "none";
     }
-  } else {
-    btnCancel.style.display = "none";
-  }
 
-  document.getElementById("detailModal").style.display = "flex";
+    document.getElementById("detailModal").style.display = "flex";
+  } catch (err) {
+    console.error("Error di openDetailModal:", err);
+    alert("Gagal menampilkan detail. Silakan refresh halaman.");
+  }
 }
 
 async function confirmCancelBooking() {
