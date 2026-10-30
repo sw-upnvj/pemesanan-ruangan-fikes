@@ -4,19 +4,14 @@ let currentUser = null;
 let liveBookings = []; 
 
 const ROOMS = [
-  // Ruang Khusus (Existing)
   { id: "rapat", name: "Ruang Rapat FIKES" },
   { id: "209", name: "209 (CBT FIKES)" },
   { id: "podcast", name: "Ruang Podcast" },
-  
-  // Lantai 1 (100-an)
   { id: "102", name: "Ruang 102" },
   { id: "103", name: "Ruang 103" },
   { id: "104", name: "Ruang 104" },
   { id: "105", name: "Ruang 105" },
   { id: "106", name: "Ruang 106" },
-  
-  // Lantai 2 (200-an)
   { id: "201", name: "Ruang 201" },
   { id: "202", name: "Ruang 202" },
   { id: "203", name: "Ruang 203" },
@@ -25,8 +20,6 @@ const ROOMS = [
   { id: "206", name: "Ruang 206" },
   { id: "207", name: "Ruang 207" },
   { id: "208", name: "Ruang 208" },
-  
-  // Lantai 4 (400-an)
   { id: "407", name: "Ruang 407" },
   { id: "408", name: "Ruang 408" },
   { id: "409", name: "Ruang 409" },
@@ -35,7 +28,9 @@ const ROOMS = [
 
 const ALLOWED_DOMAIN = "upnvj.ac.id";
 
-// Handle response dari Google Sign-In
+// ==========================================
+// 1. FUNGSI LOGIN GOOGLE
+// ==========================================
 window.handleCredentialResponse = async function(response) {
   const idToken = response.credential;
   const loginError = document.getElementById("loginError");
@@ -45,18 +40,15 @@ window.handleCredentialResponse = async function(response) {
   loginError.style.display = "block";
 
   try {
-    // Decode token untuk dapat email
     const payload = JSON.parse(atob(idToken.split('.')[1]));
     const email = payload.email;
     
-    // Validasi domain UPNVJ
     if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
       loginError.innerText = "Hanya email @upnvj.ac.id yang diizinkan.";
       loginError.style.color = "#c0392b";
       return;
     }
 
-    // Cek apakah user sudah terdaftar
     const checkRes = await fetch(API_URL + "?action=checkUser&email=" + encodeURIComponent(email));
     const checkData = await checkRes.json();
     
@@ -65,7 +57,6 @@ window.handleCredentialResponse = async function(response) {
       return;
     }
 
-    // User sudah terdaftar → lanjut login
     const formData = new URLSearchParams();
     formData.append("action", "login");
     formData.append("id_token", idToken);
@@ -93,14 +84,27 @@ window.handleCredentialResponse = async function(response) {
   }
 };
 
-// Tampilkan halaman registrasi
+// Cek Memori saat halaman di-refresh
+window.addEventListener("DOMContentLoaded", () => {
+  const savedUser = localStorage.getItem("userData");
+  if (savedUser) {
+    currentUser = JSON.parse(savedUser);
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("mainPage").style.display = "block";
+    document.getElementById("userBadge").innerText = `${currentUser.name} (${currentUser.role} - ${currentUser.prodi || '-'})`;
+    fetchBookings().then(() => initApp());
+  }
+});
+
+// ==========================================
+// 2. FUNGSI REGISTRASI
+// ==========================================
 function showRegisterPage(email) {
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("registerPage").style.display = "flex";
   document.getElementById("regEmail").value = email;
 }
 
-// Submit registrasi
 async function submitRegister() {
   const email = document.getElementById("regEmail").value;
   const nama = document.getElementById("regNama").value.trim();
@@ -138,8 +142,6 @@ async function submitRegister() {
         document.getElementById("registerPage").style.display = "none";
         document.getElementById("loginPage").style.display = "flex";
         document.getElementById("loginError").style.display = "none";
-        
-        // Reset form
         document.getElementById("regNama").value = "";
         document.getElementById("regRole").value = "";
         document.getElementById("regProdi").value = "";
@@ -154,20 +156,9 @@ async function submitRegister() {
   }
 }
 
-// Auto-login jika ada session tersimpan
-window.addEventListener("DOMContentLoaded", () => {
-  const savedUser = localStorage.getItem("userData");
-  if (savedUser) {
-    currentUser = JSON.parse(savedUser);
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainPage").style.display = "block";
-    // Tambahkan fallback jika prodi undefined
-    document.getElementById("userBadge").innerText = 
-      `${currentUser.name} (${currentUser.role} - ${currentUser.prodi || '-'})`;
-    fetchBookings().then(() => initApp());
-  }
-});
-
+// ==========================================
+// 3. FUNGSI BOOKING & TAMPILAN
+// ==========================================
 async function fetchBookings() {
   try {
     const res = await fetch(API_URL + "?action=getBookings");
@@ -250,16 +241,15 @@ function renderRooms() {
 
     const card = document.createElement("div");
     
-    // Tentukan class CSS berdasarkan status
     let cardClass = "available";
     let statusLabel = "Tersedia — Klik untuk pesan";
     
     if (conflict) {
       if (conflict.status === 'unconfirmed') {
-        cardClass = "unconfirmed"; // Warna Oranye/Kuning
+        cardClass = "unconfirmed";
         statusLabel = `⚠️ Belum Konfirmasi: ${conflict.activity}`;
       } else {
-        cardClass = "occupied"; // Warna Abu-abu
+        cardClass = "occupied";
         statusLabel = `Dipakai: ${conflict.activity}`;
       }
     }
@@ -296,7 +286,6 @@ function openModal(room) {
   document.getElementById("formStart").value = start;
   document.getElementById("formEnd").value = end;
   
-  // OTOMATIS ISI NAMA DARI DATA USER
   document.getElementById("formContactPerson").value = currentUser.name + " (" + currentUser.role + ")";
   
   document.getElementById("formActivity").value = "";
@@ -367,37 +356,17 @@ async function submitBooking() {
 }
 
 function logout() {
-  // Konfirmasi sebelum logout
   if (!confirm("Yakin ingin logout dari sistem?")) return;
-  
-  // 1. Hapus data user dari localStorage
   localStorage.removeItem("userData");
-  
-  // 2. Reset variabel currentUser
   currentUser = null;
   liveBookings = [];
-  
-  // 3. Sembunyikan halaman utama
   document.getElementById("mainPage").style.display = "none";
-  
-  // 4. Tampilkan halaman login
   document.getElementById("loginPage").style.display = "flex";
-  
-  // 5. Reset pesan error login
-  const loginError = document.getElementById("loginError");
-  loginError.style.display = "none";
-  loginError.innerText = "";
-  
-  // 6. Reset Google Sign-In state (agar bisa login dengan akun berbeda)
+  document.getElementById("loginError").style.display = "none";
+  document.getElementById("loginError").innerText = "";
   if (window.google && google.accounts && google.accounts.id) {
-    try {
-      google.accounts.id.disableAutoSelect();
-    } catch (err) {
-      console.log("Google sign-in reset:", err);
-    }
+    try { google.accounts.id.disableAutoSelect(); } catch (err) {}
   }
-  
-  console.log("✅ User berhasil logout");
 }
 
 function openDetailModal(booking, room) {
@@ -406,7 +375,6 @@ function openDetailModal(booking, room) {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const dateStr = dateObj.toLocaleDateString('id-ID', options);
 
-    // Helper function untuk set text dengan aman
     const setText = (id, value) => {
       const el = document.getElementById(id);
       if (el) el.innerText = value || "-";
@@ -421,7 +389,6 @@ function openDetailModal(booking, room) {
     setText("detailEmail", booking.email);
     setText("detailNotes", booking.notes);
 
-    // Tampilkan tombol batal hanya jika user yang login adalah pemesan
     const btnCancel = document.getElementById("btnCancelBooking");
     if (btnCancel && currentUser && booking.email.toLowerCase() === currentUser.email.toLowerCase()) {
       if (booking.status === 'confirmed' || booking.status === 'unconfirmed') {
@@ -444,15 +411,10 @@ function openDetailModal(booking, room) {
 async function confirmCancelBooking() {
   const btn = document.getElementById("btnCancelBooking");
   const bookingId = btn.dataset.id;
-  
   if (!bookingId) return;
 
-  // Konfirmasi bertingkat agar user tidak salah klik
-  const confirm1 = confirm("Apakah Anda yakin ingin MEMBATALKAN pemesanan ini?\n\nRuangan akan otomatis tersedia untuk pengguna lain.");
-  if (!confirm1) return;
-
-  const confirm2 = confirm("KONFIRMASI TERAKHIR:\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan pembatalan?");
-  if (!confirm2) return;
+  if (!confirm("Apakah Anda yakin ingin MEMBATALKAN pemesanan ini?")) return;
+  if (!confirm("KONFIRMASI TERAKHIR:\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?")) return;
 
   const originalText = btn.innerText;
   btn.innerText = "Memproses...";
@@ -470,7 +432,7 @@ async function confirmCancelBooking() {
     if (result.success) {
       alert("✅ " + result.message);
       closeDetailModal();
-      await fetchBookings(); // Refresh data ruangan
+      await fetchBookings();
     } else {
       alert("❌ Gagal: " + result.message);
     }

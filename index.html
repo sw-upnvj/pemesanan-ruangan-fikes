@@ -16,7 +16,7 @@
       <p>Gunakan akun Google <strong>@upnvj.ac.id</strong> untuk masuk.</p>
       
       <div id="g_id_onload"
-           data-client_id="25545982602-98bli48phvd6ao2dla4r07qqh8uhfbue.apps.googleusercontent.com"
+           data-client_id="25545982602-uf1e2dgiki7d337l65oe2t559b2oat3b.apps.googleusercontent.com"
            data-callback="handleCredentialResponse"
            data-auto_prompt="false">
       </div>
@@ -32,7 +32,7 @@
     </div>
   </div>
 
-  <!-- HALAMAN REGISTRASI (BARU) -->
+  <!-- HALAMAN REGISTRASI -->
   <div id="registerPage" class="page-section" style="display:none;">
     <div class="login-box register-box">
       <h2>Registrasi Akun Baru</h2>
@@ -40,15 +40,9 @@
       
       <form id="registerForm">
         <div class="form-group">
-          <label>PIC Kegiatan</label>
-          <input type="text" id="formLecturer" placeholder="Nama lengkap PIC">
-        </div>
-        
-        <div class="form-group">
           <label>Nama Lengkap *</label>
           <input type="text" id="regNama" required placeholder="Masukkan nama lengkap">
         </div>
-        
         <div class="form-group">
           <label>Kategori User *</label>
           <select id="regRole" required>
@@ -59,7 +53,6 @@
             <option value="Dosen Tidak Tetap">Dosen Tidak Tetap</option>
           </select>
         </div>
-        
         <div class="form-group">
           <label>Program Studi *</label>
           <select id="regProdi" required>
@@ -76,10 +69,9 @@
             <option value="S2 Keperawatan">S2 Keperawatan</option>
           </select>
         </div>
-        
+        <input type="hidden" id="regEmail">
         <button type="button" onclick="submitRegister()" class="btn-primary">Daftar</button>
       </form>
-      
       <p id="registerError" class="error-text" style="display:none;"></p>
       <p id="registerSuccess" class="success-text" style="display:none;"></p>
     </div>
@@ -94,9 +86,7 @@
           <p class="subtitle">FIKES UPNVJ</p>
           <p id="userBadge" class="user-badge"></p>
         </div>
-        <button onclick="logout()" class="btn-logout" title="Keluar dari akun">
-          🚪 Logout
-        </button>
+        <button onclick="logout()" class="btn-logout" title="Keluar dari akun">🚪 Logout</button>
       </div>
     </header>
 
@@ -128,7 +118,7 @@
     </main>
   </div>
 
-    <!-- MODAL FORM PEMESANAN -->
+  <!-- MODAL FORM PEMESANAN -->
   <div id="bookingModal" class="modal-overlay">
     <div class="modal-content">
       <h2 id="modalRoomName" class="modal-title">Nama Ruangan</h2>
@@ -140,28 +130,22 @@
         <input type="hidden" id="formStart">
         <input type="hidden" id="formEnd">
         
-        <!-- PERBAIKAN: Input Nama Pemesan dikembalikan -->
         <div class="form-group">
           <label>Nama Pemesan (Otomatis)</label>
           <input type="text" id="formContactPerson" readonly class="input-readonly">
         </div>
-
         <div class="form-group">
           <label>Nama Kegiatan *</label>
           <input type="text" id="formActivity" required placeholder="Contoh: Perkuliahan, Rapat Dosen">
         </div>
-
-        <!-- PERBAIKAN: Duplikat dihapus, label disesuaikan -->
         <div class="form-group">
           <label>Matakuliah / Kegiatan</label>
           <input type="text" id="formCourse" placeholder="Contoh: Pemrograman Web">
         </div>
-
         <div class="form-group">
           <label>PIC Kegiatan</label>
           <input type="text" id="formLecturer" placeholder="Nama lengkap PIC">
         </div>
-
         <div class="form-row">
           <div class="form-group half">
             <label>No. HP / WA PIC *</label>
@@ -172,7 +156,6 @@
             <input type="number" id="formCount" placeholder="30">
           </div>
         </div>
-
         <div class="form-group">
           <label>Catatan Khusus</label>
           <textarea id="formNotes" rows="2" placeholder="Butuh proyektor, sound system, dll"></textarea>
@@ -186,7 +169,7 @@
     </div>
   </div>
 
-    <!-- MODAL DETAIL RUANGAN -->
+  <!-- MODAL DETAIL RUANGAN -->
   <div id="detailModal" class="modal-overlay">
     <div class="modal-content detail-modal">
       <div class="detail-header">
@@ -228,4 +211,7 @@
       </div>
     </div>
   </div>
+
+  <script src="app.js"></script>
+</body>
 </html>
