@@ -4,9 +4,33 @@ let currentUser = null;
 let liveBookings = []; 
 
 const ROOMS = [
+  // Ruang Khusus (Existing)
   { id: "rapat", name: "Ruang Rapat FIKES" },
   { id: "209", name: "209 (CBT FIKES)" },
-  { id: "podcast", name: "Ruang Podcast" }
+  { id: "podcast", name: "Ruang Podcast" },
+  
+  // Lantai 1 (100-an)
+  { id: "102", name: "Ruang 102" },
+  { id: "103", name: "Ruang 103" },
+  { id: "104", name: "Ruang 104" },
+  { id: "105", name: "Ruang 105" },
+  { id: "106", name: "Ruang 106" },
+  
+  // Lantai 2 (200-an)
+  { id: "201", name: "Ruang 201" },
+  { id: "202", name: "Ruang 202" },
+  { id: "203", name: "Ruang 203" },
+  { id: "204", name: "Ruang 204" },
+  { id: "205", name: "Ruang 205" },
+  { id: "206", name: "Ruang 206" },
+  { id: "207", name: "Ruang 207" },
+  { id: "208", name: "Ruang 208" },
+  
+  // Lantai 4 (400-an)
+  { id: "407", name: "Ruang 407" },
+  { id: "408", name: "Ruang 408" },
+  { id: "409", name: "Ruang 409" },
+  { id: "410", name: "Ruang 410" }
 ];
 
 const ALLOWED_DOMAIN = "upnvj.ac.id";
