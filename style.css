@@ -1,156 +1,265 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; color: #1a1a1a; }
+/* ==========================================
+   FOREST & GOLD THEME - FIKES UPNVJ
+   ========================================== */
 
-/* --- HALAMAN LOGIN & REGISTRASI --- */
-#loginPage, #registerPage { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: #f4f6f8; }
-.login-box, .register-box { background: #fff; padding: 30px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
-.login-box h2, .register-box h2 { margin-bottom: 8px; color: #1e3a5f; }
-.login-box p, .register-box p { font-size: 0.9rem; color: #666; margin-bottom: 20px; }
-.error-text { color: #c0392b; font-size: 0.85rem; margin-top: 10px; }
-.success-text { color: #27ae60; font-size: 0.85rem; margin-top: 10px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* --- FORM --- */
-.form-group { margin-bottom: 14px; text-align: left; }
-.form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #333; }
-.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1e3a5f; }
-.input-readonly { background: #f0f0f0 !important; color: #666 !important; cursor: not-allowed !important; }
-.btn-primary { width: 100%; padding: 12px; background: #1e3a5f; color: #fff; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 8px; }
-.btn-primary:hover { background: #16304f; }
-
-/* --- HALAMAN UTAMA --- */
-.app-header { background: #1e3a5f; color: #fff; padding: 20px 16px; text-align: center; }
-.app-header h1 { font-size: 1.3rem; }
-.subtitle { font-size: 0.85rem; opacity: 0.8; margin-top: 4px; }
-.user-badge { font-size: 0.75rem; margin-top: 8px; background: rgba(255,255,255,0.2); display: inline-block; padding: 4px 10px; border-radius: 20px; }
-
-.container { max-width: 960px; margin: 0 auto; padding: 16px; }
-.control-card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
-.control-card label { font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block; color: #444; }
-.input-date, .input-time { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-
-.quick-dates { display: flex; gap: 8px; margin-top: 10px; }
-.btn-quick { flex: 1; padding: 8px; border: 1px solid #1e3a5f; background: #fff; color: #1e3a5f; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
-.btn-quick:hover, .btn-quick.active { background: #1e3a5f; color: #fff; }
-
-.time-range { display: flex; gap: 12px; margin-top: 14px; }
-.time-field { flex: 1; }
-
-.section-title { font-size: 1rem; margin-bottom: 12px; color: #333; }
-.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-
-.room-card { border-radius: 12px; padding: 16px 12px; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid transparent; }
-.room-card.available { background: #2ecc71; color: #fff; cursor: pointer; border-color: #27ae60; transition: transform 0.12s; }
-.room-card.available:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4); }
-.room-card.occupied { background: #d1d8e0; color: #4b6584; cursor: pointer; border-color: #a5b1c2; transition: transform 0.12s; }
-.room-card.occupied:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(75, 101, 132, 0.3); }
-.room-name { font-size: 1rem; font-weight: 700; }
-.room-status { font-size: 0.75rem; margin-top: 6px; }
-.room-card.available .room-status { color: #0d3d11; font-weight: 600; }
-
-@media (max-width: 480px) { .room-grid { grid-template-columns: repeat(2, 1fr); } }
-
-/* --- MODAL --- */
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
-.modal-content { background: #fff; padding: 24px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-.modal-title { margin-bottom: 4px; color: #1e3a5f; font-size: 1.3rem; }
-.modal-subtitle { font-size: 0.9rem; color: #666; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
-.form-row { display: flex; gap: 12px; }
-.form-group.half { flex: 1; }
-.modal-actions { display: flex; gap: 12px; margin-top: 24px; }
-.btn-cancel { flex: 1; padding: 12px; background: #e0e0e0; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; }
-.btn-submit { flex: 1; padding: 12px; background: #2ecc71; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1rem; }
-.btn-submit:disabled { background: #95a5a6; cursor: not-allowed; }
-
-/* --- DETAIL MODAL --- */
-.detail-modal { max-width: 500px; }
-.detail-header { position: relative; padding-bottom: 16px; border-bottom: 2px solid #1e3a5f; margin-bottom: 20px; }
-.close-btn { position: absolute; top: 0; right: 0; background: #e0e0e0; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.close-btn:hover { background: #c0392b; color: #fff; }
-.detail-body { display: flex; flex-direction: column; gap: 14px; }
-.detail-item { display: flex; flex-direction: column; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #1e3a5f; }
-.detail-label { font-size: 0.75rem; color: #666; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
-.detail-value { font-size: 1rem; color: #1a1a1a; font-weight: 500; }
-
-/* --- HEADER DENGAN TOMBOL LOGOUT --- */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 960px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-  gap: 12px;
+:root {
+  /* 4 Warna Utama dari User */
+  --hijau-gelap: #0D3B2E;  /* Header & Judul */
+  --hijau-tosca: #1D6A52;  /* Tersedia & Tombol */
+  --emas: #C19246;         /* Belum Konfirmasi */
+  --krem: #F1E8D9;         /* Background */
+  
+  /* Warna Pendukung */
+  --putih: #FFFFFF;
+  --abu-teks: #666666;
+  --abu-kotak: #E8E0D5;    /* Sedikit lebih gelap dari krem untuk kotak terpakai */
+  
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 50px;
 }
-.header-content > div {
-  flex: 1;
-  text-align: center;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
 }
-.btn-logout {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
+
+body {
+  background-color: var(--krem);
+  color: var(--hijau-gelap);
+  line-height: 1.5;
+}
+
+/* ==========================================
+   HALAMAN LOGIN & REGISTRASI
+   ========================================== */
+.page-section { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-box { background: var(--putih); padding: 40px 30px; border-radius: var(--radius-lg); width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(13, 59, 46, 0.1); text-align: center; }
+.login-box h2 { font-size: 1.5rem; font-weight: 700; color: var(--hijau-gelap); margin-bottom: 8px; }
+.login-box p { font-size: 0.9rem; color: var(--abu-teks); margin-bottom: 24px; }
+
+.form-group { margin-bottom: 16px; text-align: left; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--hijau-gelap); }
+.form-group input, .form-group select, .form-group textarea, .input-date, .input-time { width: 100%; padding: 12px 16px; border: 1px solid var(--abu-kotak); border-radius: var(--radius-md); background: var(--putih); color: var(--hijau-gelap); font-size: 0.95rem; transition: all 0.2s; }
+.form-group input:focus, .form-group select:focus, .input-date:focus, .input-time:focus { outline: none; border-color: var(--hijau-tosca); box-shadow: 0 0 0 3px rgba(29, 106, 82, 0.1); }
+.input-readonly { background: var(--krem) !important; color: var(--abu-teks) !important; cursor: not-allowed; }
+
+.error-text { color: #e74c3c; font-size: 0.85rem; margin-top: 10px; }
+.success-text { color: var(--hijau-tosca); font-size: 0.85rem; margin-top: 10px; }
+
+.btn-primary { width: 100%; padding: 14px; background: var(--hijau-tosca); color: var(--putih); border: none; border-radius: var(--radius-pill); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+.btn-primary:hover { background: var(--hijau-gelap); }
+
+/* ==========================================
+   HEADER & KONTROL (WARNA HIJAU TOSCA)
+   ========================================== */
+.app-header { 
+  background: transparent; 
+  padding: 24px 16px 0 16px; 
+  position: relative;
+  z-index: 10; 
+}
+
+.header-content { 
+  max-width: 960px; 
+  margin: 0 auto; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  background: var(--hijau-tosca); /* Warna sama dengan kartu kelas */
+  padding: 20px 24px; 
+  border-radius: var(--radius-lg); 
+  box-shadow: 0 4px 12px rgba(29, 106, 82, 0.2); 
+}
+
+/* Mengubah warna teks header agar kontras dengan background hijau */
+.header-content h1 { 
+  font-size: 1.2rem; 
+  font-weight: 700; 
+  color: var(--putih); 
+}
+
+.subtitle { 
+  font-size: 0.85rem; 
+  color: var(--krem); /* Warna krem agar serasi */
+  font-weight: 500; 
+  margin-top: 2px; 
+}
+
+.user-badge { 
+  font-size: 0.75rem; 
+  color: var(--putih); 
+  background: rgba(255, 255, 255, 0.2); /* Transparan putih */
+  padding: 4px 10px; 
+  border-radius: var(--radius-pill); 
+  display: inline-block; 
+  margin-top: 8px; 
+  font-weight: 500;
+}
+
+.btn-logout { 
+  padding: 8px 16px; 
+  background: rgba(255, 255, 255, 0.1); 
+  color: var(--putih); 
+  border: 1px solid rgba(255, 255, 255, 0.3); 
+  border-radius: var(--radius-pill); 
+  font-size: 0.85rem; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+}
+
+.btn-logout:hover { 
+  background: #fee2e2; 
+  color: #dc2626; 
+  border-color: #fca5a5; 
+}
+
+/* Kotak Pilih Tanggal */
+.control-card { 
+  background: var(--putih); /* Saya kembalikan ke putih agar bersih */
+  border-radius: var(--radius-lg); 
+  padding: 24px; 
+  margin-bottom: 24px; 
+  box-shadow: 0 4px 12px rgba(13, 59, 46, 0.05); 
+  border: 1px solid var(--krem);
+}
+
+.control-card label { 
+  font-size: 0.85rem; 
+  font-weight: 600; 
+  color: var(--hijau-gelap); 
+  margin-bottom: 8px; 
+  display: block; 
+}
+
+/* Mengembalikan garis tepi pada input */
+.input-date, .input-time { 
+  background: var(--putih); 
+  border: 1px solid var(--abu-kotak); /* Garis tepi abu-abu lembut */
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  width: 100%;
+  color: var(--hijau-gelap);
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+/* Efek saat input diklik */
+.input-date:focus, .input-time:focus {
+  outline: none;
+  border-color: var(--hijau-tosca);
+  box-shadow: 0 0 0 3px rgba(29, 106, 82, 0.1);
+}
+
+/* Tombol Hari Ini/Besok/Lusa */
+.btn-quick { 
+  border: 1px solid var(--abu-kotak); 
+  background: var(--putih); 
+  color: var(--abu-teks); 
+  border-radius: var(--radius-md);
+  padding: 10px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
-}
-.btn-logout:hover {
-  background: #c0392b;
-  border-color: #c0392b;
-  transform: translateY(-1px);
-}
-.btn-logout:active {
-  transform: translateY(0);
 }
 
-@media (max-width: 480px) {
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  .btn-logout {
-    align-self: center;
-  }
+.btn-quick:hover { 
+  border-color: var(--hijau-tosca); 
+  color: var(--hijau-tosca); 
 }
 
-/* --- STATUS BELUM KONFIRMASI (ORANYE) --- */
-.room-card.unconfirmed { 
-  background: #f39c12; /* Warna Oranye */
-  color: #fff; 
-  cursor: pointer; 
-  border-color: #e67e22; 
-  transition: transform 0.12s;
-}
-.room-card.unconfirmed:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4); 
-}
-.room-card.unconfirmed .room-status { 
-  color: #fff; 
-  font-weight: 600; 
+.btn-quick.active { 
+  background: var(--hijau-tosca); 
+  color: var(--putih); 
+  border-color: var(--hijau-tosca); 
 }
 
-/* --- TOMBOL BATALKAN (MERAH) --- */
-.btn-danger {
-  flex: 1;
-  padding: 12px;
-  background: #e74c3c;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  font-size: 1rem;
-  transition: background 0.2s;
-}
-.btn-danger:hover {
-  background: #c0392b;
-}
-.btn-danger:disabled {
-  background: #95a5a6;
-  cursor: not-allowed;
+/* ==========================================
+   KONTROL & KARTU
+   ========================================== */
+.container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+.control-card { background: var(--putih); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(13, 59, 46, 0.05); border: 1px solid var(--krem); }
+.control-card label { font-size: 0.85rem; font-weight: 600; color: var(--hijau-gelap); margin-bottom: 8px; display: block; }
+
+.quick-dates { display: flex; gap: 8px; margin-top: 12px; }
+.btn-quick { flex: 1; padding: 10px; border: 1px solid var(--abu-kotak); background: var(--putih); color: var(--abu-teks); border-radius: var(--radius-md); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-quick:hover { border-color: var(--hijau-tosca); color: var(--hijau-tosca); }
+.btn-quick.active { background: var(--hijau-tosca); color: var(--putih); border-color: var(--hijau-tosca); }
+
+.time-range { display: flex; gap: 16px; margin-top: 16px; }
+.time-field { flex: 1; }
+
+/* ==========================================
+   STATUS RUANGAN
+   ========================================== */
+.room-section { margin-bottom: 40px; }
+.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+.room-card { border-radius: var(--radius-lg); padding: 20px 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s; border: 1px solid transparent; }
+.room-name { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.room-status { font-size: 0.75rem; line-height: 1.4; font-weight: 500; }
+
+/* Tersedia (Hijau Tosca) */
+.room-card.available { background: var(--hijau-tosca); color: var(--putih); cursor: pointer; box-shadow: 0 4px 12px rgba(29, 106, 82, 0.2); }
+.room-card.available:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(29, 106, 82, 0.3); }
+.room-card.available .room-status { color: rgba(255, 255, 255, 0.85); }
+
+/* Terpakai (Krem Gelap/Abu) */
+.room-card.occupied { background: var(--abu-kotak); color: var(--abu-teks); cursor: pointer; }
+.room-card.occupied:hover { background: #DCD3C6; }
+.room-card.occupied .room-status { color: #8A8070; }
+
+/* Belum Konfirmasi (Emas) */
+.room-card.unconfirmed { background: var(--emas); color: var(--putih); cursor: pointer; box-shadow: 0 4px 12px rgba(193, 146, 70, 0.2); }
+.room-card.unconfirmed:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(193, 146, 70, 0.3); }
+
+/* ==========================================
+   TABEL LIST PEMESANAN
+   ========================================== */
+table { border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--krem); }
+table th { background: var(--krem); font-weight: 700; color: var(--hijau-gelap); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+table td { color: var(--hijau-gelap); font-size: 0.9rem; font-weight: 500; }
+table tr:hover { background-color: rgba(241, 232, 217, 0.5); }
+
+/* ==========================================
+   MODAL (POP-UP)
+   ========================================== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 59, 46, 0.6); backdrop-filter: blur(4px); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay[style*="display: flex"] { display: flex !important; }
+.modal-content { background: var(--putih); padding: 32px 24px; border-radius: var(--radius-lg); width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 1.25rem; font-weight: 700; color: var(--hijau-gelap); margin-bottom: 4px; }
+.modal-subtitle { font-size: 0.9rem; color: var(--emas); font-weight: 600; margin-bottom: 24px; }
+
+.form-row { display: flex; gap: 16px; }
+.form-group.half { flex: 1; }
+
+.modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+.btn-cancel { flex: 1; padding: 14px; background: var(--putih); color: var(--hijau-gelap); border: 1px solid var(--abu-kotak); border-radius: var(--radius-pill); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+.btn-cancel:hover { background: var(--krem); }
+.btn-submit { flex: 1; padding: 14px; background: var(--hijau-tosca); color: var(--putih); border: none; border-radius: var(--radius-pill); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+.btn-submit:hover { background: var(--hijau-gelap); }
+.btn-danger { flex: 1; padding: 14px; background: #FEE2E2; color: #DC2626; border: 1px solid #FCA5A5; border-radius: var(--radius-pill); font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+.btn-danger:hover { background: #FECACA; }
+
+/* Detail Modal */
+.detail-modal { max-width: 520px; }
+.detail-header { margin-bottom: 20px; position: relative; }
+.close-btn { position: absolute; top: -10px; right: -10px; background: var(--krem); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; color: var(--hijau-gelap); display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.close-btn:hover { background: #FEE2E2; color: #DC2626; }
+.detail-body { display: flex; flex-direction: column; gap: 16px; }
+.detail-item { display: flex; flex-direction: column; border-bottom: 1px dashed var(--abu-kotak); padding-bottom: 8px; }
+.detail-label { font-size: 0.75rem; font-weight: 700; color: var(--emas); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-value { font-size: 1rem; color: var(--hijau-gelap); font-weight: 500; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .time-range { flex-direction: column; gap: 12px; }
+  .room-grid { grid-template-columns: repeat(2, 1fr); }
+  .header-content { flex-direction: column; text-align: center; gap: 12px; }
+  .form-row { flex-direction: column; gap: 0; }
 }
