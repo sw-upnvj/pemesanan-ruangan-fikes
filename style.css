@@ -263,3 +263,40 @@ table tr:hover { background-color: rgba(241, 232, 217, 0.5); }
   .header-content { flex-direction: column; text-align: center; gap: 12px; }
   .form-row { flex-direction: column; gap: 0; }
 }
+
+/* ==========================================
+   PERBAIKAN TAMPILAN DI HP (MOBILE FRIENDLY)
+   ========================================== */
+@media (max-width: 768px) {
+  /* 1. Perbaiki Tombol Tanggal (Hari Ini, Besok, Lusa) */
+  .quick-dates { 
+    flex-direction: column; /* Ubah dari sejajar menjadi atas-bawah */
+    gap: 8px; 
+  }
+  
+  .btn-quick { 
+    width: 100%; /* Buat tombol memenuhi layar */
+  }
+
+  /* 2. Perbaiki Input Tanggal & Jam agar tidak melar di Safari */
+  .input-date, .input-time {
+    -webkit-appearance: none; /* Mematikan gaya bawaan Safari iOS */
+    appearance: none;
+    border-radius: var(--radius-md) !important; /* Paksa sudutnya kotak membulat, bukan kapsul */
+    text-align: left; /* Teks rata kiri agar rapi */
+    padding: 12px 16px;
+    height: auto;
+    background-color: var(--putih);
+  }
+
+  /* 3. Tombol "Lihat Daftar Pemesanan" */
+  .room-section > div:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+
+  .room-section > div:first-child button {
+    width: 100%; /* Tombol daftar melebar penuh di HP */
+  }
+}
