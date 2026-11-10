@@ -184,7 +184,8 @@ async function fetchBookings() {
           lecturerName: b.lecturerName || "-",
           contactPerson: b.contactPerson || "-",
           contactPhone: b.contactPhone || "-",
-          notes: b.notes || "-"
+          notes: b.notes || "-",
+          participantCount: b.participantCount || "-" // Data Baru
         };
       });
       renderRooms();
@@ -220,6 +221,20 @@ function initApp() {
   document.getElementById("startTime").addEventListener("change", renderRooms);
   document.getElementById("endTime").addEventListener("change", renderRooms);
   document.querySelector(".btn-quick[data-offset='0']").click();
+
+  // AUTO REFRESH SETIAP 15 DETIK
+  setInterval(async () => {
+    const isLoggedIn = document.getElementById("mainPage").style.display === "block";
+    const isModalOpen = document.getElementById("bookingModal").style.display === "flex" || document.getElementById("detailModal").style.display === "flex";
+    
+    if (isLoggedIn && !isModalOpen) {
+      await fetchBookings(); 
+      // Jika sedang di halaman list, update tabelnya
+      if (document.getElementById("listBookingContainer").style.display === "block") {
+        renderListBookings();
+      }
+    }
+  }, 15000);
 }
 
 function renderRooms() {
@@ -328,6 +343,7 @@ async function submitBooking() {
     lecturerName: document.getElementById("formLecturer").value,
     contactPerson: currentUser.name,
     contactPhone: phone,
+    participantCount: document.getElementById("formCount").value, // Data Baru
     notes: document.getElementById("formNotes").value
   };
 
@@ -388,6 +404,7 @@ function openDetailModal(booking, room) {
     setText("detailContact", booking.contactPerson + " (" + booking.contactPhone + ")");
     setText("detailEmail", booking.email);
     setText("detailNotes", booking.notes);
+    setText("detailCount", booking.participantCount + " orang"); // Data Baru
 
     const btnCancel = document.getElementById("btnCancelBooking");
     if (btnCancel && currentUser && booking.email.toLowerCase() === currentUser.email.toLowerCase()) {
@@ -446,4 +463,69 @@ async function confirmCancelBooking() {
 
 function closeDetailModal() {
   document.getElementById("detailModal").style.display = "none";
+}
+
+// ==========================================
+// 5. FUNGSI DAFTAR PEMESANAN (LIST VIEW)
+// ==========================================
+function toggleListBooking() {
+  const listContainer = document.getElementById("listBookingContainer");
+  const roomGrid = document.getElementById("roomGrid");
+  const btn = document.getElementById("btnToggleList");
+
+  if (listContainer.style.display === "none") {
+    // Tampilkan List, Sembunyikan Grid
+    listContainer.style.display = "block";
+    roomGrid.style.display = "none";
+    btn.innerText = "🏢 Kembali ke Status Ruangan";
+    
+    // Isi tabel dengan data terbaru
+    renderListBookings();
+  } else {
+    // Sembunyikan List, Tampilkan Grid
+    listContainer.style.display = "none";
+    roomGrid.style.display = "grid";
+    btn.innerText = "📋 Lihat Daftar Pemesanan";
+  }
+}
+
+function renderListBookings() {
+  const tbody = document.getElementById("listBookingBody");
+  tbody.innerHTML = "";
+
+  // Urutkan berdasarkan tanggal dan jam terdekat
+  const sortedBookings = [...liveBookings].sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return a.start.localeCompare(b.start);
+  });
+
+  if (sortedBookings.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px; color: #666;">Belum ada jadwal pemesanan.</td></tr>`;
+    return;
+  }
+
+  sortedBookings.forEach(b => {
+    // Cari nama ruangan berdasarkan roomId
+    const roomObj = ROOMS.find(r => r.id === b.roomId);
+    const roomName = roomObj ? roomObj.name : b.roomId;
+
+    // Format tanggal
+    const dateObj = new Date(b.date + "T00:00:00");
+    const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    
+    // Warna status
+    let statusColor = b.status === 'unconfirmed' ? '#f39c12' : '#2ecc71';
+    let statusText = b.status === 'unconfirmed' ? '(Belum Konfirmasi)' : '';
+
+    const tr = document.createElement("tr");
+    tr.style.borderBottom = "1px solid #eee";
+    tr.innerHTML = `
+      <td style="padding: 10px;">${dateStr}</td>
+      <td style="padding: 10px;">${b.start} - ${b.end}</td>
+      <td style="padding: 10px; font-weight: bold; color: #1e3a5f;">${roomName}</td>
+      <td style="padding: 10px;">${b.activity} <br><small style="color:${statusColor};">${statusText}</small></td>
+      <td style="padding: 10px;">${b.contactPerson || b.email}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }

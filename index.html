@@ -112,8 +112,34 @@
       </section>
 
       <section class="room-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 class="section-title" style="margin-bottom: 0;">Status Ruangan</h2>
+        <button onclick="toggleListBooking()" id="btnToggleList" style="padding: 8px 16px; background: #1e3a5f; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">
+          📋 Lihat Daftar Pemesanan
+        </button>
+      </div>
         <h2 class="section-title">Status Ruangan</h2>
         <div id="roomGrid" class="room-grid"></div>
+              <!-- LIST PEMESANAN (Tersembunyi secara default) -->
+      <div id="listBookingContainer" style="display: none; margin-top: 20px; background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+        <h2 class="section-title" style="margin-bottom: 12px;">Daftar Pemesanan Aktif</h2>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+            <thead>
+              <tr style="background: #f4f6f8; border-bottom: 2px solid #ddd;">
+                <th style="padding: 10px;">Tanggal</th>
+                <th style="padding: 10px;">Waktu</th>
+                <th style="padding: 10px;">Ruangan</th>
+                <th style="padding: 10px;">Kegiatan</th>
+                <th style="padding: 10px;">Pemesan</th>
+              </tr>
+            </thead>
+            <tbody id="listBookingBody">
+              <!-- Data akan diisi oleh JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
       </section>
     </main>
   </div>
@@ -179,6 +205,10 @@
       </div>
       
       <div class="detail-body">
+        <div class="detail-item">
+          <span class="detail-label">👥 Jumlah Peserta</span>
+          <span class="detail-value" id="detailCount">-</span>
+        </div>
         <div class="detail-item">
           <span class="detail-label">📚 Kegiatan</span>
           <span class="detail-value" id="detailActivity">-</span>
