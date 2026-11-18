@@ -26,7 +26,7 @@ const ROOMS = [
   { id: "410", name: "Ruang 410" }
 ];
 
-const ALLOWED_DOMAIN = "upnvj.ac.id";
+const ALLOWED_DOMAINS = ["upnvj.ac.id", "mahasiswa.upnvj.ac.id"];
 
 // ==========================================
 // 1. FUNGSI LOGIN GOOGLE
@@ -43,11 +43,16 @@ window.handleCredentialResponse = async function(response) {
     const payload = JSON.parse(atob(idToken.split('.')[1]));
     const email = payload.email;
     
-    if (!email.endsWith("@" + ALLOWED_DOMAIN)) {
-      loginError.innerText = "Hanya email @upnvj.ac.id yang diizinkan.";
+    // --- PERUBAHAN DI SINI ---
+    const allowedDomains = ["upnvj.ac.id", "mahasiswa.upnvj.ac.id"];
+    const isAllowed = allowedDomains.some(domain => email.endsWith("@" + domain));
+    
+    if (!isAllowed) {
+      loginError.innerText = "Hanya email @upnvj.ac.id atau @mahasiswa.upnvj.ac.id yang diizinkan.";
       loginError.style.color = "#c0392b";
       return;
     }
+    // -------------------------
 
     const checkRes = await fetch(API_URL + "?action=checkUser&email=" + encodeURIComponent(email));
     const checkData = await checkRes.json();
