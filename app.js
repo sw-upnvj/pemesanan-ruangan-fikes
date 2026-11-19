@@ -1,17 +1,77 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbz-Szf7PXSSJPSEAddGSfGksyjU49d_U0ASyepGZszXDtV9pQPmbb5-2yHh3197X-DmgA/exec"; 
 
+
+
+
+
+// ==========================================
+// HELPER: Validasi waktu "HH:MM"
+// ==========================================
+function parseTimeToMinutes(t) {
+  if (!t || typeof t !== "string") return null;
+  const m = t.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const min = parseInt(m[2], 10);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+
+// Cek overlap waktu berbasis menit (bukan string)
+function timesOverlap(startA, endA, startB, endB) {
+  const sA = parseTimeToMinutes(startA);
+  const eA = parseTimeToMinutes(endA);
+  const sB = parseTimeToMinutes(startB);
+  const eB = parseTimeToMinutes(endB);
+  if (sA === null || eA === null || sB === null || eB === null) return false;
+  return sA < eB && eA > sB;
+}
+
+
+// ==========================================
+// HELPER: Toast notification (pengganti alert)
+// ==========================================
+function showToast(message, type = "info", duration = 3500) {
+  let container = document.getElementById("toastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = "toast toast-" + type;
+  toast.innerHTML = `<span>${message}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("show"));
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+function getIdToken() {
+  if (window.__lastIdToken) return window.__lastIdToken;
+  throw new Error("Sesi token tidak tersedia. Silakan login ulang.");
+}
+
 let currentUser = null;
 let liveBookings = []; 
 
 const ROOMS = [
+  // Ruang Khusus
   { id: "rapat", name: "Ruang Rapat FIKES" },
   { id: "209", name: "209 (CBT FIKES)" },
   { id: "podcast", name: "Ruang Podcast" },
+  
+  // Lantai 1 (100-an)
   { id: "102", name: "Ruang 102" },
   { id: "103", name: "Ruang 103" },
   { id: "104", name: "Ruang 104" },
   { id: "105", name: "Ruang 105" },
   { id: "106", name: "Ruang 106" },
+  
+  // Lantai 2 (200-an)
   { id: "201", name: "Ruang 201" },
   { id: "202", name: "Ruang 202" },
   { id: "203", name: "Ruang 203" },
@@ -20,6 +80,20 @@ const ROOMS = [
   { id: "206", name: "Ruang 206" },
   { id: "207", name: "Ruang 207" },
   { id: "208", name: "Ruang 208" },
+
+  // Lantai 3 (300-an) - BARU DITAMBAHKAN
+  { id: "301", name: "Ruang 301" },
+  { id: "302", name: "Ruang 302" },
+  { id: "303", name: "Ruang 303" },
+  { id: "304", name: "Ruang 304" },
+  { id: "305", name: "Ruang 305" },
+  { id: "306", name: "Ruang 306" },
+  { id: "307", name: "Ruang 307" },
+  { id: "308", name: "Ruang 308" },
+  { id: "309", name: "Ruang 309" },
+  { id: "310", name: "Ruang 310" },
+  
+  // Lantai 4 (400-an)
   { id: "407", name: "Ruang 407" },
   { id: "408", name: "Ruang 408" },
   { id: "409", name: "Ruang 409" },
@@ -27,6 +101,44 @@ const ROOMS = [
 ];
 
 const ALLOWED_DOMAINS = ["upnvj.ac.id", "mahasiswa.upnvj.ac.id"];
+
+const SESSION_MAX_AGE_MS = 1000 * 60 * 60 * 8; // 8 jam
+const STORAGE_KEY = "userData";
+
+// ==========================================
+// HELPER: Session storage (expiry + validasi)
+// ==========================================
+function saveSession(userData) {
+  const payload = {
+    data: userData,
+    savedAt: Date.now(),
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Kompatibilitas data lama (tanpa savedAt)
+    if (!parsed.data) {
+      return { user: parsed, expired: false };
+    }
+    const age = Date.now() - (parsed.savedAt || 0);
+    if (age > SESSION_MAX_AGE_MS) {
+      localStorage.removeItem(STORAGE_KEY);
+      return { user: parsed.data, expired: true };
+    }
+    return { user: parsed.data, expired: false };
+  } catch {
+    return null;
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 // ==========================================
 // 1. FUNGSI LOGIN GOOGLE
@@ -54,7 +166,7 @@ window.handleCredentialResponse = async function(response) {
     }
     // -------------------------
 
-    const checkRes = await fetch(API_URL + "?action=checkUser&email=" + encodeURIComponent(email));
+    const checkRes = await fetch(API_URL + "?action=checkUser&id_token=" + encodeURIComponent(idToken));
     const checkData = await checkRes.json();
     
     if (checkData.success && !checkData.registered) {
@@ -71,7 +183,8 @@ window.handleCredentialResponse = async function(response) {
 
     if (data.allowed) {
       currentUser = data;
-      localStorage.setItem("userData", JSON.stringify(data)); 
+      saveSession(data); // ✅ simpan dengan timestamp
+      window.__lastIdToken = idToken; // ✅ TAMBAHKAN INI — simpan token untuk request selanjutnya
       
       document.getElementById("loginPage").style.display = "none";
       document.getElementById("mainPage").style.display = "block";
@@ -91,14 +204,30 @@ window.handleCredentialResponse = async function(response) {
 
 // Cek Memori saat halaman di-refresh
 window.addEventListener("DOMContentLoaded", () => {
-  const savedUser = localStorage.getItem("userData");
-  if (savedUser) {
-    currentUser = JSON.parse(savedUser);
-    document.getElementById("loginPage").style.display = "none";
-    document.getElementById("mainPage").style.display = "block";
-    document.getElementById("userBadge").innerText = `${currentUser.name} (${currentUser.role} - ${currentUser.prodi || '-'})`;
-    fetchBookings().then(() => initApp());
+  const session = loadSession();
+  if (!session || !session.user) return;
+
+  if (session.expired) {
+    showToast("Sesi Anda telah berakhir. Silakan login ulang.", "warning", 5000);
+    clearSession();
+    return;
   }
+
+  // ✅ CEK TOKEN: Kalau refresh halaman, token Google hilang. Paksa login ulang.
+  if (!window.__lastIdToken) {
+    showToast("Sesi token hilang karena refresh halaman. Silakan login ulang untuk memesan.", "warning", 6000);
+    clearSession();
+    // Tampilkan halaman login
+    document.getElementById("mainPage").style.display = "none";
+    document.getElementById("loginPage").style.display = "flex";
+    return;
+  }
+
+  currentUser = session.user;
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainPage").style.display = "block";
+  document.getElementById("userBadge").innerText = `${currentUser.name} (${currentUser.role} - ${currentUser.prodi || '-'})`;
+  fetchBookings().then(() => initApp());
 });
 
 // ==========================================
@@ -227,16 +356,17 @@ function initApp() {
   document.getElementById("endTime").addEventListener("change", renderRooms);
   document.querySelector(".btn-quick[data-offset='0']").click();
 
-  // AUTO REFRESH SETIAP 15 DETIK
+    // AUTO REFRESH SETIAP 15 DETIK
   setInterval(async () => {
     const isLoggedIn = document.getElementById("mainPage").style.display === "block";
-    const isModalOpen = document.getElementById("bookingModal").style.display === "flex" || document.getElementById("detailModal").style.display === "flex";
-    
-    if (isLoggedIn && !isModalOpen) {
+    if (isLoggedIn) {
       await fetchBookings(); 
-      // Jika sedang di halaman list, update tabelnya
-      if (document.getElementById("listBookingContainer").style.display === "block") {
+      // Cek tab mana yang sedang aktif, lalu update datanya
+      if (document.getElementById('tabDaftar').style.display === 'block') {
         renderListBookings();
+      }
+      if (document.getElementById('tabRekap').style.display === 'block') {
+        renderMonthlyView();
       }
     }
   }, 15000);
@@ -249,21 +379,31 @@ function renderRooms() {
   const grid = document.getElementById("roomGrid");
 
   if (!date || !start || !end) return;
+
+  // ✅ VALIDASI BARU: kalau jam tidak valid, tampilkan pesan dan jangan render
+  const sMin = parseTimeToMinutes(start);
+  const eMin = parseTimeToMinutes(end);
+  if (sMin === null || eMin === null || sMin >= eMin) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; text-align:center; color:#c0392b; font-weight:600;">⚠️ Jam mulai harus lebih awal dari jam selesai.</div>`;
+    return;
+  }
+
   grid.innerHTML = "";
 
   ROOMS.forEach(room => {
+    // ✅ PAKAI timesOverlap, bukan perbandingan string
     const conflict = liveBookings.find(b => {
-      const isSameRoom = b.roomId.toString().trim() === room.id.toString().trim();
-      const isSameDate = b.date.toString().trim() === date.toString().trim();
-      const isOverlap = (start < b.end && end > b.start);
-      return isSameRoom && isSameDate && isOverlap;
+      const isSameRoom = b.roomId === room.id.toString();
+      const isSameDate = b.date === date;
+      if (!isSameRoom || !isSameDate) return false;
+      return timesOverlap(start, end, b.start, b.end);
     });
 
     const card = document.createElement("div");
-    
+
     let cardClass = "available";
     let statusLabel = "Tersedia — Klik untuk pesan";
-    
+
     if (conflict) {
       if (conflict.status === 'unconfirmed') {
         cardClass = "unconfirmed";
@@ -275,15 +415,23 @@ function renderRooms() {
     }
 
     card.className = "room-card " + cardClass;
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
 
-    if (conflict) {
+        if (conflict) {
       card.innerHTML = `<div class="room-name">${room.name}</div>
-                        <div class="room-status"><strong>${statusLabel}</strong><br><small>(${conflict.email})</small><br><small>️ Klik untuk detail</small></div>`;
+                        <div class="room-status"><strong>${statusLabel}</strong><br><small>(${conflict.email})</small><br><small>👁️ Klik untuk detail</small></div>`;
       card.addEventListener("click", () => openDetailModal(conflict, room));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetailModal(conflict, room); }
+      });
     } else {
       card.innerHTML = `<div class="room-name">${room.name}</div>
                         <div class="room-status">${statusLabel}</div>`;
       card.addEventListener("click", () => openModal(room));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(room); }
+      });
     }
     grid.appendChild(card);
   });
@@ -294,20 +442,36 @@ function openModal(room) {
   const start = document.getElementById("startTime").value;
   const end = document.getElementById("endTime").value;
 
+  // ✅ VALIDASI BARU: cek jam mulai < jam selesai dan dalam rentang 07:00-21:00
+  const sMin = parseTimeToMinutes(start);
+  const eMin = parseTimeToMinutes(end);
+    if (sMin === null || eMin === null || sMin >= eMin) {
+    showToast("Jam mulai harus lebih awal dari jam selesai.", "error");
+    return;
+  }
+  if (sMin < 7 * 60 || eMin > 21 * 60) {
+    showToast("Pemesanan hanya diizinkan antara 07:00 - 21:00.", "error");
+    return;
+  }
+
   const dateObj = new Date(date + "T00:00:00");
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const dateStr = dateObj.toLocaleDateString('id-ID', options);
 
+  document.getElementById("bookingType").value = "single";
+  document.getElementById("multipleDateContainer").style.display = "none";
+  selectedExtraDates = [];
+
   document.getElementById("modalRoomName").innerText = room.name;
   document.getElementById("modalDateTime").innerText = dateStr + " • " + start + " - " + end;
-  
+
   document.getElementById("formRoomId").value = room.id;
   document.getElementById("formDate").value = date;
   document.getElementById("formStart").value = start;
   document.getElementById("formEnd").value = end;
-  
+
   document.getElementById("formContactPerson").value = currentUser.name + " (" + currentUser.role + ")";
-  
+
   document.getElementById("formActivity").value = "";
   document.getElementById("formCourse").value = "";
   document.getElementById("formLecturer").value = "";
@@ -325,51 +489,128 @@ function closeModal() {
 async function submitBooking() {
   const btnSubmit = document.querySelector('.btn-submit');
   const originalText = btnSubmit.innerText;
-  
+
   const activity = document.getElementById("formActivity").value.trim();
   const phone = document.getElementById("formPhone").value.trim();
-  if(!activity || !phone) {
-    alert("Nama Kegiatan dan No. HP wajib diisi!");
+  if (!activity || !phone) {
+    showToast("Nama Kegiatan dan No. HP wajib diisi!", "error");
     return;
   }
 
-  btnSubmit.innerText = "Memproses...";
+  // ✅ Validasi jam (start < end, dan dalam 07:00-21:00)
+  const start = document.getElementById("formStart").value;
+  const end = document.getElementById("formEnd").value;
+  const sMin = parseTimeToMinutes(start);
+  const eMin = parseTimeToMinutes(end);
+  if (sMin === null || eMin === null || sMin >= eMin) {
+    showToast("Jam mulai harus lebih awal dari jam selesai.", "error");
+    return;
+  }
+  if (sMin < 7 * 60 || eMin > 21 * 60) {
+    showToast("Pemesanan hanya diizinkan antara 07:00 - 21:00.", "error");
+    return;
+  }
+
+  const bookingType = document.getElementById("bookingType").value;
+  const baseDate = document.getElementById("formDate").value;
+  const roomId = document.getElementById("formRoomId").value;
+
+  let datesToBook = [];
+  if (bookingType === "single") {
+    datesToBook.push(baseDate);
+  } else {
+    if (selectedExtraDates.length === 0) {
+      showToast("Pilih minimal 1 tanggal di kalender!", "error");
+      return;
+    }
+    datesToBook = [...selectedExtraDates];
+  }
+
+  // ✅ PRE-CHECK: refresh data terbaru + cek bentrok
+  btnSubmit.innerText = "Memeriksa ketersediaan...";
   btnSubmit.disabled = true;
 
-  const payload = {
-    action: "createBooking",
-    email: currentUser.email,
-    roomId: document.getElementById("formRoomId").value,
-    date: document.getElementById("formDate").value,
-    start: document.getElementById("formStart").value,
-    end: document.getElementById("formEnd").value,
-    activity: activity,
-    courseName: document.getElementById("formCourse").value,
-    lecturerName: document.getElementById("formLecturer").value,
-    contactPerson: currentUser.name,
-    contactPhone: phone,
-    participantCount: document.getElementById("formCount").value, // Data Baru
-    notes: document.getElementById("formNotes").value
-  };
-
   try {
-    const formData = new URLSearchParams();
-    for (const key in payload) {
-      formData.append(key, payload[key]);
+    await fetchBookings();
+
+    // Cari tanggal yang bentrok
+    const conflicts = [];
+    for (const date of datesToBook) {
+      const conflict = liveBookings.find((b) => {
+        if (b.roomId !== roomId) return false;
+        if (b.date !== date) return false;
+        if (b.status === "cancelled") return false;
+        return timesOverlap(start, end, b.start, b.end);
+      });
+      if (conflict) conflicts.push(date);
     }
 
-    const res = await fetch(API_URL, { method: "POST", body: formData });
-    const result = await res.json();
+    if (conflicts.length > 0) {
+      const fmt = conflicts
+        .map((d) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short" }))
+        .join(", ");
+      showToast(`Slot sudah terisi pada: ${fmt}. Silakan pilih waktu/tanggal lain.`, "error", 6000);
+      return;
+    }
 
-    if (result.success) {
-      alert("Pemesanan Berhasil!");
-      closeModal();
-      await fetchBookings(); 
+    // ✅ SUBMIT
+    btnSubmit.innerText = "Memproses...";
+    let successCount = 0;
+    const failedDates = [];
+
+    for (const date of datesToBook) {
+      const payload = {
+        action: "createBooking",
+        id_token: getIdToken(),
+        roomId: roomId,
+        date: date,
+        start: start,
+        end: end,
+        activity: activity,
+        courseName: document.getElementById("formCourse").value,
+        lecturerName: document.getElementById("formLecturer").value,
+        contactPerson: currentUser.name,
+        contactPhone: phone,
+        participantCount: document.getElementById("formCount").value,
+        notes: document.getElementById("formNotes").value,
+      };
+
+      const formData = new URLSearchParams();
+      for (const key in payload) formData.append(key, payload[key]);
+
+      try {
+        const res = await fetch(API_URL, { method: "POST", body: formData });
+        const result = await res.json();
+        if (result.success) {
+          successCount++;
+        } else {
+          failedDates.push(date);
+        }
+      } catch (err) {
+        failedDates.push(date);
+      }
+    }
+
+    // ✅ Laporan hasil yang jelas
+    if (successCount === datesToBook.length) {
+      showToast(`✅ ${successCount} pemesanan berhasil!`, "success");
+    } else if (successCount > 0) {
+      const fmtFail = failedDates
+        .map((d) => new Date(d + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short" }))
+        .join(", ");
+      showToast(`⚠️ ${successCount} berhasil. Gagal di: ${fmtFail}.`, "warning", 6000);
     } else {
-      alert("Gagal: " + result.message);
+      showToast("❌ Semua pemesanan gagal. Silakan coba lagi.", "error");
     }
+
+    closeModal();
+    await fetchBookings();
+
+    if (document.getElementById("tabDaftar").style.display === "block") renderListBookings();
+    if (document.getElementById("tabRekap").style.display === "block") renderMonthlyView();
   } catch (err) {
-    alert("Gagal terhubung ke server.");
+    console.error(err);
+    showToast("Gagal terhubung ke server.", "error");
   } finally {
     btnSubmit.innerText = originalText;
     btnSubmit.disabled = false;
@@ -378,7 +619,7 @@ async function submitBooking() {
 
 function logout() {
   if (!confirm("Yakin ingin logout dari sistem?")) return;
-  localStorage.removeItem("userData");
+  clearSession();
   currentUser = null;
   liveBookings = [];
   document.getElementById("mainPage").style.display = "none";
@@ -409,7 +650,7 @@ function openDetailModal(booking, room) {
     setText("detailContact", booking.contactPerson + " (" + booking.contactPhone + ")");
     setText("detailEmail", booking.email);
     setText("detailNotes", booking.notes);
-    setText("detailCount", booking.participantCount + " orang"); // Data Baru
+    setText("detailCount", booking.participantCount === "-" ? "-" : booking.participantCount + " orang");
 
     const btnCancel = document.getElementById("btnCancelBooking");
     if (btnCancel && currentUser && booking.email.toLowerCase() === currentUser.email.toLowerCase()) {
@@ -426,7 +667,7 @@ function openDetailModal(booking, room) {
     document.getElementById("detailModal").style.display = "flex";
   } catch (err) {
     console.error("Error di openDetailModal:", err);
-    alert("Gagal menampilkan detail. Silakan refresh halaman.");
+    showToast("Gagal menampilkan detail. Silakan refresh halaman.", "error");
   }
 }
 
@@ -435,8 +676,8 @@ async function confirmCancelBooking() {
   const bookingId = btn.dataset.id;
   if (!bookingId) return;
 
-  if (!confirm("Apakah Anda yakin ingin MEMBATALKAN pemesanan ini?")) return;
-  if (!confirm("KONFIRMASI TERAKHIR:\n\nTindakan ini tidak dapat dibatalkan. Lanjutkan?")) return;
+  // ✅ Cukup 1 confirm (tidak dobel)
+  if (!confirm("Yakin ingin membatalkan pemesanan ini? Tindakan tidak dapat dibatalkan.")) return;
 
   const originalText = btn.innerText;
   btn.innerText = "Memproses...";
@@ -444,22 +685,25 @@ async function confirmCancelBooking() {
 
   const formData = new URLSearchParams();
   formData.append("action", "cancelBooking");
-  formData.append("id", bookingId);
-  formData.append("email", currentUser.email);
+formData.append("id", bookingId);
+formData.append("id_token", getIdToken()); // ✅ KIRIM TOKEN
 
   try {
     const res = await fetch(API_URL, { method: "POST", body: formData });
     const result = await res.json();
 
     if (result.success) {
-      alert("✅ " + result.message);
+      showToast("✅ " + result.message, "success");
       closeDetailModal();
       await fetchBookings();
+
+      if (document.getElementById('tabDaftar').style.display === 'block') renderListBookings();
+      if (document.getElementById('tabRekap').style.display === 'block') renderMonthlyView();
     } else {
-      alert("❌ Gagal: " + result.message);
+      showToast("❌ Gagal: " + (result.message || "Tidak diketahui"), "error");
     }
   } catch (err) {
-    alert("Gagal terhubung ke server.");
+    showToast("Gagal terhubung ke server.", "error");
   } finally {
     btn.innerText = originalText;
     btn.disabled = false;
@@ -473,26 +717,7 @@ function closeDetailModal() {
 // ==========================================
 // 5. FUNGSI DAFTAR PEMESANAN (LIST VIEW)
 // ==========================================
-function toggleListBooking() {
-  const listContainer = document.getElementById("listBookingContainer");
-  const roomGrid = document.getElementById("roomGrid");
-  const btn = document.getElementById("btnToggleList");
 
-  if (listContainer.style.display === "none") {
-    // Tampilkan List, Sembunyikan Grid
-    listContainer.style.display = "block";
-    roomGrid.style.display = "none";
-    btn.innerText = "🏢 Kembali ke Status Ruangan";
-    
-    // Isi tabel dengan data terbaru
-    renderListBookings();
-  } else {
-    // Sembunyikan List, Tampilkan Grid
-    listContainer.style.display = "none";
-    roomGrid.style.display = "grid";
-    btn.innerText = "📋 Lihat Daftar Pemesanan";
-  }
-}
 
 function renderListBookings() {
   const tbody = document.getElementById("listBookingBody");
@@ -534,3 +759,289 @@ function renderListBookings() {
     tbody.appendChild(tr);
   });
 }
+
+// ==========================================
+// 6. FUNGSI REKAP 1 BULAN
+// ==========================================
+
+
+function renderMonthlyView() {
+  const monthValue = document.getElementById("monthPicker").value; // Format: YYYY-MM
+  const table = document.getElementById("matrixTable");
+  table.innerHTML = "";
+
+  if (!monthValue) return;
+
+  const [year, month] = monthValue.split("-");
+  const daysInMonth = new Date(year, month, 0).getDate(); 
+
+  // 1. Buat Header (Tanggal)
+  let thead = "<thead><tr style='background: #f4f6f8;'>";
+  thead += "<th style='padding: 10px; text-align: left; min-width: 140px; border: 1px solid #ddd; font-weight: bold; color: var(--hijau-gelap); position: sticky; left: 0; background: #f4f6f8; z-index: 1;'>Ruangan \\ Tanggal</th>";
+  
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(year, month - 1, d);
+    const dayOfWeek = dateObj.getDay();
+    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+    const bgColor = isWeekend ? "#f8d7da" : "#f4f6f8";
+    
+    // Format angka jadi 2 digit (01, 02)
+    const dayStr = String(d).padStart(2, '0');
+    
+    thead += `<th style="padding: 8px 4px; border: 1px solid #ddd; font-weight: 600; color: var(--hijau-gelap); background: ${bgColor}; min-width: 35px;">${dayStr}</th>`;
+  }
+  thead += "</tr></thead>";
+  table.innerHTML += thead;
+
+  // 2. Buat Body (Baris per Ruangan)
+  let tbody = "<tbody>";
+  
+  ROOMS.forEach(room => {
+    tbody += "<tr>";
+    // Kolom Nama Ruangan (Sticky agar tetap terlihat saat scroll ke kanan)
+    tbody += `<td style="padding: 10px; text-align: left; font-weight: 600; font-size: 0.85rem; border: 1px solid #ddd; color: var(--hijau-gelap); position: sticky; left: 0; background: #fff; z-index: 1;">${room.name}</td>`;
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${month}-${String(d).padStart(2, '0')}`;
+      
+      // Cari semua booking di tanggal & ruangan ini (bisa lebih dari 1 jam)
+      const bookings = liveBookings.filter(b => 
+        b.roomId === room.id && 
+        b.date === dateStr && 
+        b.status !== 'cancelled'
+      );
+
+      let cellContent = "";
+      let cellBg = "#fff"; // Default kosong
+      
+      if (bookings.length > 0) {
+        // Jika ada booking, warnai kotaknya
+        const isUnconfirmed = bookings.some(b => b.status === 'unconfirmed');
+        cellBg = isUnconfirmed ? "var(--emas)" : "var(--hijau-tosca)";
+        
+        // Buat text kecil (misal: "08:00") agar terlihat rapi
+        const times = bookings.map(b => b.start).join(", ");
+        cellContent = `<span style="color: white; font-size: 0.7rem; font-weight: bold;">${times}</span>`;
+      }
+
+      // Simpan data booking ke atribut onclick agar bisa dibuka detailnya
+      const bookingsJson = encodeURIComponent(JSON.stringify(bookings));
+      
+      tbody += `<td style="padding: 6px 4px; border: 1px solid #ddd; background: ${cellBg}; cursor: ${bookings.length > 0 ? 'pointer' : 'default'}; border-radius: 4px;" 
+                   ${bookings.length > 0 ? `onclick="openDetailFromMatrix('${bookingsJson}', '${room.name}')"` : ''}>
+                   ${cellContent}
+                </td>`;
+    }
+    tbody += "</tr>";
+  });
+  
+  tbody += "</tbody>";
+  table.innerHTML += tbody;
+}
+
+// Fungsi pembantu untuk membuka detail dari Matriks
+function openDetailFromMatrix(bookingsJson, roomName) {
+  const bookings = JSON.parse(decodeURIComponent(bookingsJson));
+  if (!bookings || bookings.length === 0) return;
+
+  // ✅ Jika hanya 1 booking → langsung buka detail seperti biasa
+  if (bookings.length === 1) {
+    const roomObj = ROOMS.find(r => r.name === roomName) || { name: roomName, id: bookings[0].roomId };
+    openDetailModal(bookings[0], roomObj);
+    return;
+  }
+
+  // ✅ Jika >1 booking → tampilkan modal pilihan
+  const safeRoomName = roomName.replace(/'/g, "\\'");
+  const list = bookings.map((b) => {
+    const encoded = encodeURIComponent(JSON.stringify(b));
+    return `<div class="matrix-booking-item" onclick="openDetailFromMatrixSingle('${encoded}', '${safeRoomName}')">
+      <strong>${b.start} - ${b.end}</strong> — ${b.activity}
+      <br><small>${b.contactPerson || b.email}</small>
+    </div>`;
+  }).join("");
+
+  let modal = document.getElementById("matrixListModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "matrixListModal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2 class="modal-title" id="matrixListTitle">Pemesanan</h2>
+        <p class="modal-subtitle">Pilih salah satu untuk melihat detail</p>
+        <div id="matrixListBody" style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto;"></div>
+        <div class="modal-actions">
+          <button onclick="document.getElementById('matrixListModal').style.display='none'" class="btn-cancel">Tutup</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+  document.getElementById("matrixListTitle").innerText = "Pemesanan di " + roomName;
+  document.getElementById("matrixListBody").innerHTML = list;
+  modal.style.display = "flex";
+}
+
+// ✅ Helper baru: buka detail satu booking dari modal pilihan
+function openDetailFromMatrixSingle(encoded, roomName) {
+  const booking = JSON.parse(decodeURIComponent(encoded));
+  const roomObj = ROOMS.find(r => r.name === roomName) || { name: roomName, id: booking.roomId };
+  document.getElementById("matrixListModal").style.display = "none";
+  openDetailModal(booking, roomObj);
+}
+
+function switchTab(tabId) {
+  // Sembunyikan semua konten tab
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  
+  // Hapus class active dari semua tombol
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  
+  // Tampilkan konten yang dipilih
+  document.getElementById(tabId).style.display = 'block';
+  
+  // Tambahkan class active ke tombol yang diklik
+  if (tabId === 'tabPesan') document.getElementById('btnTabPesan').classList.add('active');
+  if (tabId === 'tabDaftar') document.getElementById('btnTabDaftar').classList.add('active');
+  if (tabId === 'tabRekap') document.getElementById('btnTabRekap').classList.add('active');
+
+  // Render ulang data sesuai tab
+  if (tabId === 'tabDaftar') renderListBookings();
+  if (tabId === 'tabRekap') {
+    const today = new Date();
+    const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    document.getElementById("monthPicker").value = currentMonth;
+    renderMonthlyView();
+  }
+}
+
+function toggleBookingType() {
+  const type = document.getElementById("bookingType").value;
+  const multipleContainer = document.getElementById("multipleDateContainer");
+  
+  if (type === "multiple") {
+    multipleContainer.style.display = "block";
+    renderMiniCalendar();
+  } else {
+    multipleContainer.style.display = "none";
+  }
+}
+
+let selectedExtraDates = []; // Menyimpan tanggal yang di-klik user
+
+function renderMiniCalendar() {
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+  selectedExtraDates = []; // Reset pilihan setiap kali kalender dibuka
+
+  const baseDateStr = document.getElementById("formDate").value; // Tanggal awal yang dipilih di luar
+  const baseDate = new Date(baseDateStr + "T00:00:00");
+  const year = baseDate.getFullYear();
+  const month = baseDate.getMonth();
+
+  // Buat Header Hari (Sen, Sel, Rab, dst)
+  const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  days.forEach(day => {
+    grid.innerHTML += `<div style="font-size: 0.7rem; font-weight: bold; color: var(--hijau-gelap); padding-bottom: 4px;">${day}</div>`;
+  });
+
+  // Dapatkan hari pertama di bulan tersebut (0=Minggu, 1=Senin, dst)
+  let firstDay = new Date(year, month, 1).getDay();
+  // Konversi agar Senin = 0, Minggu = 6
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
+
+  // Kosongkan kotak sebelum tanggal 1
+  for (let i = 0; i < firstDay; i++) {
+    grid.innerHTML += `<div></div>`;
+  }
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const roomId = document.getElementById("formRoomId").value;
+  const start = document.getElementById("formStart").value;
+  const end = document.getElementById("formEnd").value;
+
+  // Generate tanggal 1 sampai akhir bulan
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    
+    // ✅ Cek apakah tanggal ini sudah terisi (pakai timesOverlap)
+    const isOverlap = liveBookings.find(b =>
+      b.roomId === roomId &&
+      b.date === dateStr &&
+      timesOverlap(start, end, b.start, b.end)
+    );
+
+    let cellStyle = "padding: 6px 0; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;";
+    
+    if (isOverlap) {
+      // Jika sudah terisi
+      cellStyle += "background: #e0e0e0; color: #999; cursor: not-allowed;";
+      grid.innerHTML += `<div style="${cellStyle}">${d}</div>`;
+    } else {
+      // Jika kosong, bisa diklik
+      cellStyle += "background: #fff; border: 1px solid var(--abu-kotak); color: var(--hijau-gelap); font-weight: bold;";
+      
+      // Beri ID unik untuk cell ini
+      const cellId = `cal-${dateStr}`;
+      grid.innerHTML += `<div id="${cellId}" style="${cellStyle}" onclick="toggleDateSelection('${dateStr}', '${cellId}')">${d}</div>`;
+      
+      // Jika tanggal ini adalah tanggal awal (baseDate), otomatis pilih
+      if (dateStr === baseDateStr) {
+        toggleDateSelection(dateStr, cellId);
+      }
+    }
+  }
+}
+
+// Fungsi untuk memilih/batal memilih tanggal
+function toggleDateSelection(dateStr, cellId) {
+  const cell = document.getElementById(cellId);
+  const index = selectedExtraDates.indexOf(dateStr);
+
+  if (index > -1) {
+    // Jika sudah dipilih, batalkan pilihan
+    selectedExtraDates.splice(index, 1);
+    cell.style.background = "#fff";
+    cell.style.color = "var(--hijau-gelap)";
+  } else {
+    // Jika belum dipilih, tambahkan
+    selectedExtraDates.push(dateStr);
+    cell.style.background = "var(--hijau-tosca)";
+    cell.style.color = "#fff";
+  }
+}
+
+// Reset pilihan ke "Sekali Pesan" setiap kali modal dibuka
+function resetBookingType() {
+  document.getElementById("bookingType").value = "single";
+  toggleBookingType();
+}
+
+// ==========================================
+// AKSESIBILITAS: Tutup modal dengan Esc
+// ==========================================
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+
+  // Tutup modal detail jika terbuka
+  const detailModal = document.getElementById("detailModal");
+  if (detailModal && detailModal.style.display === "flex") {
+    closeDetailModal();
+    return;
+  }
+
+  // Tutup modal form booking jika terbuka
+  const bookingModal = document.getElementById("bookingModal");
+  if (bookingModal && bookingModal.style.display === "flex") {
+    closeModal();
+    return;
+  }
+
+  // Tutup modal pilihan matriks jika terbuka
+  const matrixModal = document.getElementById("matrixListModal");
+  if (matrixModal && matrixModal.style.display === "flex") {
+    matrixModal.style.display = "none";
+  }
+});
+
+

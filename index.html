@@ -14,20 +14,8 @@
     <div class="login-box">
       <h2>Login FIKES UPNVJ</h2>
       <p>Gunakan akun Google <strong>@upnvj.ac.id</strong> untuk masuk.</p>
-      
-      <div id="g_id_onload"
-           data-client_id="25545982602-uf1e2dgiki7d337l65oe2t559b2oat3b.apps.googleusercontent.com"
-           data-callback="handleCredentialResponse"
-           data-auto_prompt="false">
-      </div>
-      <div class="g_id_signin" 
-           data-type="standard" 
-           data-shape="rectangular" 
-           data-theme="outline" 
-           data-text="signin_with" 
-           data-size="large">
-      </div>
-      
+      <div id="g_id_onload" data-client_id="25545982602-uf1e2dgiki7d337l65oe2t559b2oat3b.apps.googleusercontent.com" data-callback="handleCredentialResponse" data-auto_prompt="false"></div>
+      <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large"></div>
       <p id="loginError" class="error-text" style="display:none;"></p>
     </div>
   </div>
@@ -37,7 +25,6 @@
     <div class="login-box register-box">
       <h2>Registrasi Akun Baru</h2>
       <p>Email Anda belum terdaftar. Silakan lengkapi data berikut.</p>
-      
       <form id="registerForm">
         <div class="form-group">
           <label>Nama Lengkap *</label>
@@ -57,7 +44,7 @@
           <label>Program Studi *</label>
           <select id="regProdi" required>
             <option value="">-- Pilih Program Studi / Unit --</option>
-            <option value="Tendik">Tendik (Tenaga Kependidikan)</option>
+            <option value="Tendik">Tendik</option>
             <option value="S1 Keperawatan">S1 Keperawatan</option>
             <option value="S1 Gizi">S1 Gizi</option>
             <option value="S1 Kesehatan Masyarakat">S1 Kesehatan Masyarakat</option>
@@ -91,55 +78,88 @@
     </header>
 
     <main class="container">
-      <section class="control-card">
-        <label>Pilih Tanggal</label>
-        <input type="date" id="datePicker" class="input-date">
-        <div class="quick-dates">
-          <button type="button" class="btn-quick" data-offset="0">Hari Ini</button>
-          <button type="button" class="btn-quick" data-offset="1">Besok</button>
-          <button type="button" class="btn-quick" data-offset="2">Lusa</button>
-        </div>
-        <div class="time-range">
-          <div class="time-field">
-            <label>Jam Mulai</label>
-            <input type="time" id="startTime" class="input-time" min="07:00" max="21:00" value="08:00">
-          </div>
-          <div class="time-field">
-            <label>Jam Selesai</label>
-            <input type="time" id="endTime" class="input-time" min="07:00" max="21:00" value="10:00">
-          </div>
-        </div>
-      </section>
+      <!-- MENU NAVIGASI TAB -->
+      <div class="tab-menu">
+        <button class="tab-btn active" onclick="switchTab('tabPesan')" id="btnTabPesan">🏢 Pesan Kelas</button>
+        <button class="tab-btn" onclick="switchTab('tabDaftar')" id="btnTabDaftar">📋 Daftar Pemesan</button>
+        <button class="tab-btn" onclick="switchTab('tabRekap')" id="btnTabRekap">📅 Rekap 1 Bulan</button>
+      </div>
 
-      <section class="room-section">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 class="section-title" style="margin-bottom: 0;">Status Ruangan</h2>
-        <button onclick="toggleListBooking()" id="btnToggleList" style="padding: 8px 16px; background: var(--emas); color: var(--krem); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: 0.85rem; font-weight: bold; box-shadow: 0 2px 8px rgba(193, 146, 70, 0.3);">
-          📋 Lihat Daftar Pemesanan
-        </button>
+      <!-- KONTEN: PESAN KELAS -->
+      <div id="tabPesan" class="tab-content">
+        <section class="control-card">
+          <label>Pilih Tanggal</label>
+          <input type="date" id="datePicker" class="input-date">
+          <div class="quick-dates">
+            <button type="button" class="btn-quick" data-offset="0">Hari Ini</button>
+            <button type="button" class="btn-quick" data-offset="1">Besok</button>
+            <button type="button" class="btn-quick" data-offset="2">Lusa</button>
+          </div>
+          <div class="time-range">
+            <div class="time-field">
+              <label>Jam Mulai</label>
+              <input type="time" id="startTime" class="input-time" min="07:00" max="21:00" value="08:00">
+            </div>
+            <div class="time-field">
+              <label>Jam Selesai</label>
+              <input type="time" id="endTime" class="input-time" min="07:00" max="21:00" value="10:00">
+            </div>
+          </div>
+        </section>
+
+        <section class="room-section">
+          <h2 class="section-title">Status Ruangan</h2>
+          <div id="roomGrid" class="room-grid"></div>
+        </section>
       </div>
-        <div id="roomGrid" class="room-grid"></div>
-              <!-- LIST PEMESANAN (Tersembunyi secara default) -->
-      <div id="listBookingContainer" style="display: none; margin-top: 20px; background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
-        <h2 class="section-title" style="margin-bottom: 12px;">Daftar Pemesanan Aktif</h2>
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-            <thead>
-              <tr style="background: #f4f6f8; border-bottom: 2px solid #ddd;">
-                <th style="padding: 10px;">Tanggal</th>
-                <th style="padding: 10px;">Waktu</th>
-                <th style="padding: 10px;">Ruangan</th>
-                <th style="padding: 10px;">Kegiatan</th>
-                <th style="padding: 10px;">Pemesan</th>
-              </tr>
-            </thead>
-            <tbody id="listBookingBody">
-              <!-- Data akan diisi oleh JavaScript -->
-            </tbody>
-          </table>
+
+      <!-- KONTEN: DAFTAR PEMESAN -->
+      <div id="tabDaftar" class="tab-content" style="display: none;">
+        <div style="background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+          <h2 class="section-title" style="margin-bottom: 12px;">Daftar Pemesanan Aktif</h2>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+              <thead>
+                <tr style="background: #f4f6f8; border-bottom: 2px solid #ddd;">
+                  <th style="padding: 10px;">Tanggal</th>
+                  <th style="padding: 10px;">Waktu</th>
+                  <th style="padding: 10px;">Ruangan</th>
+                  <th style="padding: 10px;">Kegiatan</th>
+                  <th style="padding: 10px;">Pemesan</th>
+                </tr>
+              </thead>
+              <tbody id="listBookingBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
-      </section>
+
+      <!-- KONTEN: REKAP 1 BULAN -->
+      <div id="tabRekap" class="tab-content" style="display: none;">
+        <div style="background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <h2 class="section-title" style="margin-bottom: 0;">Matriks Jadwal Bulanan</h2>
+            <input type="month" id="monthPicker" onchange="renderMonthlyView()" style="padding: 8px 12px; border: 1px solid var(--abu-kotak); border-radius: var(--radius-md); font-family: inherit; font-weight: bold; color: var(--hijau-gelap);">
+          </div>
+          
+          <div class="matrix-scroll-wrapper">
+            <table id="matrixTable"></table>
+          </div>
+          
+          <div style="margin-top: 16px; display: flex; gap: 16px; font-size: 0.8rem; font-weight: 600;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 16px; height: 16px; background: var(--hijau-tosca); border-radius: 4px;"></div> Terisi
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 16px; height: 16px; background: var(--emas); border-radius: 4px;"></div> Belum Konfirmasi
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <div style="width: 16px; height: 16px; background: var(--krem); border: 1px solid var(--abu-kotak); border-radius: 4px;"></div> Kosong
+            </div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -185,7 +205,30 @@
           <label>Catatan Khusus</label>
           <textarea id="formNotes" rows="2" placeholder="Butuh proyektor, sound system, dll"></textarea>
         </div>
-        
+
+        <!-- Tipe Pemesanan (HANYA SATU) -->
+        <div class="form-group" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #ddd;">
+          <label style="font-weight: bold; color: var(--hijau-tosca);">Tipe Pemesanan</label>
+          <select id="bookingType" onchange="toggleBookingType()" style="width: 100%; padding: 12px; border: 1px solid var(--abu-kotak); border-radius: var(--radius-md); margin-bottom: 10px;">
+            <option value="single">Sekali Pesan (Hanya tanggal ini)</option>
+            <option value="multiple">Pilih Banyak Tanggal (Kalender)</option>
+          </select>
+        </div>
+
+        <!-- WADAH KALENDER MULTIPLE -->
+        <div id="multipleDateContainer" style="display: none; margin-bottom: 16px; background: var(--krem); padding: 12px; border-radius: 8px;">
+          <p style="font-size: 0.85rem; margin-bottom: 8px; font-weight: 600; color: var(--hijau-gelap);">
+            Klik tanggal yang ingin dipesan (Bisa lebih dari 1):
+          </p>
+          <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center;">
+            <!-- Kalender akan di-generate oleh JS -->
+          </div>
+          <p style="font-size: 0.75rem; margin-top: 8px; color: var(--abu-teks);">
+            <span style="display:inline-block; width:10px; height:10px; background:var(--hijau-tosca); border-radius:50%;"></span> Kosong (Bisa dipilih) &nbsp;&nbsp;
+            <span style="display:inline-block; width:10px; height:10px; background:#ccc; border-radius:50%;"></span> Terisi (Tidak bisa)
+          </p>
+        </div>
+
         <div class="modal-actions">
           <button type="button" onclick="closeModal()" class="btn-cancel">Batal</button>
           <button type="button" onclick="submitBooking()" class="btn-submit">Pesan Ruangan</button>
