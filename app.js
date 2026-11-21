@@ -213,16 +213,18 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // ✅ CEK TOKEN: Kalau refresh halaman, token Google hilang. Paksa login ulang.
+  // ✅ JIKA TOKEN HILANG KARENA REFRESH: Paksa ke halaman login
   if (!window.__lastIdToken) {
-    showToast("Sesi token hilang karena refresh halaman. Silakan login ulang untuk memesan.", "warning", 6000);
-    clearSession();
+    showToast("Halaman dimuat ulang. Silakan klik login untuk memesan ruangan.", "info", 5000);
+    clearSession(); // Hapus sesi agar bersih
+    
     // Tampilkan halaman login
     document.getElementById("mainPage").style.display = "none";
     document.getElementById("loginPage").style.display = "flex";
-    return;
+    return; // Hentikan eksekusi di sini
   }
 
+  // Jika token masih ada (jarang terjadi, tapi untuk berjaga-jaga)
   currentUser = session.user;
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainPage").style.display = "block";
@@ -380,7 +382,6 @@ function renderRooms() {
 
   if (!date || !start || !end) return;
 
-  // ✅ VALIDASI BARU: kalau jam tidak valid, tampilkan pesan dan jangan render
   const sMin = parseTimeToMinutes(start);
   const eMin = parseTimeToMinutes(end);
   if (sMin === null || eMin === null || sMin >= eMin) {
@@ -391,7 +392,6 @@ function renderRooms() {
   grid.innerHTML = "";
 
   ROOMS.forEach(room => {
-    // ✅ PAKAI timesOverlap, bukan perbandingan string
     const conflict = liveBookings.find(b => {
       const isSameRoom = b.roomId === room.id.toString();
       const isSameDate = b.date === date;
@@ -415,7 +415,6 @@ function renderRooms() {
     card.setAttribute("role", "button");
     card.setAttribute("tabindex", "0");
 
-    // Baris kapasitas (hanya tampil jika ada datanya)
     const capacityLine = room.capacity
       ? `<div class="room-capacity">🪑 ${room.capacity} kursi</div>`
       : "";
@@ -423,13 +422,17 @@ function renderRooms() {
     if (conflict) {
       // TAMPILAN JIKA TERPAKAI / BELUM KONFIRMASI
       card.innerHTML = `
-        <div class="room-name">${room.name}</div>
-        ${capacityLine}
-        <div class="room-status">
+        <div class="card-top">
+          <div class="room-name">${room.name}</div>
+          ${capacityLine}
+        </div>
+        <div class="card-bottom">
           <strong>Dipakai: ${conflict.activity}</strong><br>
           <small>(${conflict.email})</small><br>
           <small>👁️ Klik untuk detail</small>
         </div>`;
+      
+      // ✅ Listener klik dimasukkan kembali ke dalam
       card.addEventListener("click", () => openDetailModal(conflict, room));
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetailModal(conflict, room); }
@@ -437,16 +440,21 @@ function renderRooms() {
     } else {
       // TAMPILAN JIKA TERSEDIA (SESUAI FOTO)
       card.innerHTML = `
-        <div class="room-name">${room.name}</div>
-        ${capacityLine}
-        <div class="room-status">Tersedia — Klik untuk pesan</div>`;
+        <div class="card-top">
+          <div class="room-name">${room.name}</div>
+          ${capacityLine}
+        </div>
+        <div class="card-bottom">
+          <span>Tersedia — Klik untuk pesan</span>
+        </div>`;
+      
+      // ✅ Listener klik dimasukkan kembali ke dalam
       card.addEventListener("click", () => openModal(room));
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(room); }
       });
     }
     
-    // Memasukkan card ke dalam grid
     grid.appendChild(card);
   });
 }

@@ -196,93 +196,172 @@ body {
 .time-field { flex: 1; }
 
 /* ==========================================
-   STATUS RUANGAN
+   STATUS RUANGAN (TINGGI SAMA RATA)
    ========================================== */
 .room-section { margin-bottom: 40px; }
 
 .room-grid { 
   display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Lebar card disesuaikan */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
   gap: 16px; 
+  align-items: stretch; /* ✅ Memaksa semua item di grid sama tinggi */
 }
 
 .room-card {
   padding: 20px;
   border-radius: 12px;
-  text-align: left; /* Teks rata kiri seperti di foto */
+  text-align: left;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  min-height: 120px;
+  height: 100%; /* ✅ Memastikan card mengisi seluruh tinggi ruang grid-nya */
+  min-height: 140px; /* Tinggi minimal (opsional) */
   transition: transform 0.2s, box-shadow 0.2s;
   border: none;
   outline: none;
-  cursor: pointer; /* Tambahkan cursor pointer di sini */
+  cursor: pointer;
+  box-sizing: border-box; /* Memastikan padding tidak menambah lebar/tinggi */
 }
 
-/* Warna Hijau Tersedia (Sesuai Foto) */
-.room-card.available { 
-  background-color: var(--hijau-tosca); /* Hijau Tosca */
-  color: var(--putih);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+/* Warna Tersedia (Hijau) */
+.room-card.available { background-color: var(--hijau-tosca); color: var(--putih); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.room-card.available:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(29, 106, 82, 0.3); }
+
+/* Warna Terpakai (Krem) */
+.room-card.occupied { background-color: #F8F4EE; color: #333333; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #E8E0D5; }
+
+/* Warna Belum Konfirmasi (Emas) */
+.room-card.unconfirmed { background-color: var(--emas); color: var(--putih); box-shadow: 0 4px 12px rgba(193, 146, 70, 0.2); }
+
+/* ==========================================
+   PENATAAN TEKS DI DALAM CARD
+   ========================================== */
+
+/* Pembungkus Atas (Nama & Kapasitas) */
+.card-top {
+  margin-bottom: 12px;
 }
 
-.room-card.available:hover { 
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(29, 106, 82, 0.3); 
-}
-
-/* Warna Krem Terpakai (Sesuai Foto) */
-.room-card.occupied { 
-  background-color: #F8F4EE; /* Krem sangat muda */
-  color: #333333;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid #E8E0D5;
-}
-
-.room-card.occupied:hover {
-  background-color: #F1E8D9;
-}
-
-/* Warna Emas Belum Konfirmasi */
-.room-card.unconfirmed { 
-  background-color: var(--emas); /* Emas */
-  color: var(--putih);
-  box-shadow: 0 4px 12px rgba(193, 146, 70, 0.2);
-}
-
-.room-card.unconfirmed:hover { 
-  transform: translateY(-2px); 
-  box-shadow: 0 8px 16px rgba(193, 146, 70, 0.3); 
-}
-
-/* --- STYLE TEKS DI DALAM CARD --- */
 .room-name { 
-  font-size: 1.1rem; 
+  font-size: 1.05rem; 
   font-weight: 700; 
-  margin-bottom: 8px; 
   line-height: 1.3;
+  margin-bottom: 6px; 
 }
 
 .room-capacity {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  margin-bottom: 10px;
   opacity: 0.9;
 }
 
-.room-status { 
-  font-size: 0.85rem; 
+/* Pembungkus Bawah (Status/Tersedia/Dipakai) */
+.card-bottom {
+  margin-top: auto; /* ✅ KUNCI: Mendorong teks ini selalu ke dasar card */
+  font-size: 0.8rem; 
   line-height: 1.4; 
   font-weight: 400;
-  margin-top: auto; /* Mendorong teks status ke bawah jika ada ruang */
 }
 
-.room-status small {
+.card-bottom small {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   margin-top: 4px;
   opacity: 0.8;
+}
+
+/* ==========================================
+   TAMPILAN KHUSUS LAYAR HP (MOBILE)
+   ========================================== */
+@media (max-width: 600px) {
+  .room-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px; 
+  }
+  
+  .room-card {
+    padding: 14px; 
+    min-height: 130px;
+  }
+  
+  .room-name {
+    font-size: 0.9rem; 
+  }
+  
+  .room-capacity {
+    font-size: 0.7rem;
+  }
+
+  .card-bottom {
+    font-size: 0.75rem; 
+  }
+}
+
+@media (max-width: 600px) {
+  .room-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .room-card { padding: 14px; min-height: 130px; }
+  .room-name { font-size: 0.9rem; }
+  .room-capacity { font-size: 0.7rem; }
+  .card-bottom { font-size: 0.75rem; }
+}
+/* Mobile */
+@media (max-width: 600px) {
+  .room-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .room-card { padding: 14px; min-height: 130px; }
+  .room-name { font-size: 0.9rem; }
+  .room-capacity { font-size: 0.7rem; }
+  .card-bottom { font-size: 0.75rem; }
+}
+
+/* ==========================================
+   TAMPILAN KHUSUS LAYAR HP (MOBILE)
+   ========================================== */
+@media (max-width: 600px) {
+  .room-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px; 
+  }
+  
+  .room-card {
+    padding: 14px; 
+    min-height: 120px;
+  }
+  
+  .room-name {
+    font-size: 0.9rem; 
+  }
+  
+  .room-capacity {
+    font-size: 0.7rem;
+  }
+
+  .room-status {
+    font-size: 0.75rem; 
+  }
+}
+
+/* ==========================================
+   TAMBAHAN: KHUSUS UNTUK LAYAR HP (MOBILE)
+   ========================================== */
+@media (max-width: 600px) {
+  .room-grid { 
+    /* Memaksa jadi 2 kolom di HP, lebarnya dibagi rata */
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px; /* Jarak antar card sedikit dirapatkan */
+  }
+  
+  .room-card {
+    padding: 14px; /* Padding dikurangi agar ruang teks lebih luas */
+    min-height: 110px; /* Sedikit lebih pendek agar pas di layar */
+  }
+  
+  .room-name {
+    font-size: 0.95rem; /* Ukuran teks nama ruangan disesuaikan */
+    margin-bottom: 6px;
+  }
+  
+  .room-status {
+    font-size: 0.75rem; /* Teks "Tersedia" dikecilkan */
+  }
 }
 
 /* Memperbaiki tampilan teks di card yang terpakai agar lebih terbaca */
@@ -464,14 +543,19 @@ select {
 
 .toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  bottom: 20px; /* Ubah dari top: 20px ke bottom: 20px */
+  left: 50%;
+  transform: translateX(-50%); /* Agar posisinya pas di tengah */
   z-index: 10000;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 360px;
+  align-items: center;
+  width: calc(100% - 40px);
+  max-width: 400px;
 }
+
+/* Sesuaikan animasinya agar muncul dari bawah */
 .toast {
   padding: 14px 18px;
   border-radius: var(--radius-md);
@@ -479,8 +563,16 @@ select {
   font-size: 0.9rem;
   font-weight: 500;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-  transform: translateX(120%);
+  transform: translateY(120%); /* Ubah dari translateX ke translateY */
   transition: transform 0.3s ease;
+  width: 100%;
+  text-align: center;
+}
+.toast.show { transform: translateY(0); }
+
+/* Di HP, buat memenuhi layar */
+@media (max-width: 600px) {
+  .toast-container { bottom: 10px; width: calc(100% - 20px); }
 }
 .toast.show { transform: translateX(0); }
 .toast-info    { background: var(--hijau-tosca); }

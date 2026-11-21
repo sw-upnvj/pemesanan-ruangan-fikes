@@ -6,6 +6,15 @@
   <title>Pemesanan Ruangan FIKES UPNVJ</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    // Fungsi ini akan menampilkan Pop-up Login otomatis jika token hilang
+    window.promptReAuth = function() {
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.prompt(); 
+      }
+    };
+  </script>
 </head>
 <body>
 
