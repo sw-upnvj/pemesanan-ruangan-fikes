@@ -60,44 +60,44 @@ let liveBookings = [];
 
 const ROOMS = [
   // Ruang Khusus
-  { id: "rapat", name: "Ruang Rapat FIKES" },
-  { id: "209", name: "209 (CBT FIKES)" },
-  { id: "podcast", name: "Ruang Podcast" },
+  { id: "rapat", name: "Ruang Rapat FIKES", capacity: null },
+  { id: "209", name: "209 (CBT FIKES)", capacity: null },
+  { id: "podcast", name: "Ruang Podcast", capacity: null },
   
   // Lantai 1 (100-an)
-  { id: "102", name: "Ruang 102" },
-  { id: "103", name: "Ruang 103" },
-  { id: "104", name: "Ruang 104" },
-  { id: "105", name: "Ruang 105" },
-  { id: "106", name: "Ruang 106" },
+  { id: "102", name: "Ruang 102", capacity: 45 },
+  { id: "103", name: "Ruang 103", capacity: 46 },
+  { id: "104", name: "Ruang 104", capacity: 45 },
+  { id: "105", name: "Ruang 105", capacity: 45 },
+  { id: "106", name: "Ruang 106", capacity: 25 },
   
   // Lantai 2 (200-an)
-  { id: "201", name: "Ruang 201" },
-  { id: "202", name: "Ruang 202" },
-  { id: "203", name: "Ruang 203" },
-  { id: "204", name: "Ruang 204" },
-  { id: "205", name: "Ruang 205" },
-  { id: "206", name: "Ruang 206" },
-  { id: "207", name: "Ruang 207" },
-  { id: "208", name: "Ruang 208" },
+  { id: "201", name: "Ruang 201", capacity: 30 },
+  { id: "202", name: "Ruang 202", capacity: 55 },
+  { id: "203", name: "Ruang 203", capacity: 54 },
+  { id: "204", name: "Ruang 204", capacity: 55 },
+  { id: "205", name: "Ruang 205", capacity: 55 },
+  { id: "206", name: "Ruang 206", capacity: 55 },
+  { id: "207", name: "Ruang 207", capacity: 55 },
+  { id: "208", name: "Ruang 208", capacity: 55 },
 
-  // Lantai 3 (300-an) - BARU DITAMBAHKAN
-  { id: "301", name: "Ruang 301" },
-  { id: "302", name: "Ruang 302" },
-  { id: "303", name: "Ruang 303" },
-  { id: "304", name: "Ruang 304" },
-  { id: "305", name: "Ruang 305" },
-  { id: "306", name: "Ruang 306" },
-  { id: "307", name: "Ruang 307" },
-  { id: "308", name: "Ruang 308" },
-  { id: "309", name: "Ruang 309" },
-  { id: "310", name: "Ruang 310" },
+  // Lantai 3 (300-an)
+  { id: "301", name: "Ruang 301", capacity: 20 },
+  { id: "302", name: "Ruang 302", capacity: 20 },
+  { id: "303", name: "Ruang 303", capacity: 20 },
+  { id: "304", name: "Ruang 304", capacity: 20 },
+  { id: "305", name: "Ruang 305", capacity: 20 },
+  { id: "306", name: "Ruang 306", capacity: 20 },
+  { id: "307", name: "Ruang 307", capacity: 20 },   // asumsi sama dgn 301-306
+  { id: "308", name: "Ruang 308", capacity: 20 },   // asumsi sama
+  { id: "309", name: "Ruang 309", capacity: 20 },   // asumsi sama
+  { id: "310", name: "Ruang 310", capacity: 20 },   // asumsi sama
   
   // Lantai 4 (400-an)
-  { id: "407", name: "Ruang 407" },
-  { id: "408", name: "Ruang 408" },
-  { id: "409", name: "Ruang 409" },
-  { id: "410", name: "Ruang 410" }
+  { id: "407", name: "Ruang 407", capacity: 50 },
+  { id: "408", name: "Ruang 408", capacity: 52 },
+  { id: "409", name: "Ruang 409", capacity: 50 },
+  { id: "410", name: "Ruang 410", capacity: 44 }
 ];
 
 const ALLOWED_DOMAINS = ["upnvj.ac.id", "mahasiswa.upnvj.ac.id"];
@@ -402,15 +402,12 @@ function renderRooms() {
     const card = document.createElement("div");
 
     let cardClass = "available";
-    let statusLabel = "Tersedia — Klik untuk pesan";
-
+    
     if (conflict) {
       if (conflict.status === 'unconfirmed') {
         cardClass = "unconfirmed";
-        statusLabel = `⚠️ Belum Konfirmasi: ${conflict.activity}`;
       } else {
         cardClass = "occupied";
-        statusLabel = `Dipakai: ${conflict.activity}`;
       }
     }
 
@@ -418,21 +415,38 @@ function renderRooms() {
     card.setAttribute("role", "button");
     card.setAttribute("tabindex", "0");
 
-        if (conflict) {
-      card.innerHTML = `<div class="room-name">${room.name}</div>
-                        <div class="room-status"><strong>${statusLabel}</strong><br><small>(${conflict.email})</small><br><small>👁️ Klik untuk detail</small></div>`;
+    // Baris kapasitas (hanya tampil jika ada datanya)
+    const capacityLine = room.capacity
+      ? `<div class="room-capacity">🪑 ${room.capacity} kursi</div>`
+      : "";
+
+    if (conflict) {
+      // TAMPILAN JIKA TERPAKAI / BELUM KONFIRMASI
+      card.innerHTML = `
+        <div class="room-name">${room.name}</div>
+        ${capacityLine}
+        <div class="room-status">
+          <strong>Dipakai: ${conflict.activity}</strong><br>
+          <small>(${conflict.email})</small><br>
+          <small>👁️ Klik untuk detail</small>
+        </div>`;
       card.addEventListener("click", () => openDetailModal(conflict, room));
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetailModal(conflict, room); }
       });
     } else {
-      card.innerHTML = `<div class="room-name">${room.name}</div>
-                        <div class="room-status">${statusLabel}</div>`;
+      // TAMPILAN JIKA TERSEDIA (SESUAI FOTO)
+      card.innerHTML = `
+        <div class="room-name">${room.name}</div>
+        ${capacityLine}
+        <div class="room-status">Tersedia — Klik untuk pesan</div>`;
       card.addEventListener("click", () => openModal(room));
       card.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(room); }
       });
     }
+    
+    // Memasukkan card ke dalam grid
     grid.appendChild(card);
   });
 }
@@ -514,6 +528,16 @@ async function submitBooking() {
   const bookingType = document.getElementById("bookingType").value;
   const baseDate = document.getElementById("formDate").value;
   const roomId = document.getElementById("formRoomId").value;
+      // ✅ Validasi jumlah peserta vs kapasitas ruangan
+  const roomObj = ROOMS.find(r => r.id === roomId);
+  const countInput = document.getElementById("formCount").value;
+  if (roomObj && roomObj.capacity && countInput) {
+    const count = parseInt(countInput, 10);
+    if (!isNaN(count) && count > roomObj.capacity) {
+      showToast(`Jumlah peserta (${count}) melebihi kapasitas ruangan (${roomObj.capacity} kursi).`, "error", 5000);
+      return;
+    }
+  }
 
   let datesToBook = [];
   if (bookingType === "single") {
@@ -644,6 +668,7 @@ function openDetailModal(booking, room) {
 
     setText("detailRoomName", room.name);
     setText("detailDateTime", dateStr + " • " + booking.start + " - " + booking.end);
+    setText("detailCapacity", room.capacity ? room.capacity + " kursi" : "-");
     setText("detailActivity", booking.activity);
     setText("detailCourse", booking.courseName);
     setText("detailLecturer", booking.lecturerName);
@@ -957,6 +982,7 @@ function renderMiniCalendar() {
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const roomId = document.getElementById("formRoomId").value;
+
   const start = document.getElementById("formStart").value;
   const end = document.getElementById("formEnd").value;
 

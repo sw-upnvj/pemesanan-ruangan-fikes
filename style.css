@@ -199,24 +199,95 @@ body {
    STATUS RUANGAN
    ========================================== */
 .room-section { margin-bottom: 40px; }
-.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
-.room-card { border-radius: var(--radius-lg); padding: 20px 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s; border: 1px solid transparent; }
-.room-name { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-.room-status { font-size: 0.75rem; line-height: 1.4; font-weight: 500; }
 
-/* Tersedia (Hijau Tosca) */
-.room-card.available { background: var(--hijau-tosca); color: var(--putih); cursor: pointer; box-shadow: 0 4px 12px rgba(29, 106, 82, 0.2); }
-.room-card.available:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(29, 106, 82, 0.3); }
-.room-card.available .room-status { color: rgba(255, 255, 255, 0.85); }
+.room-grid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Lebar card disesuaikan */
+  gap: 16px; 
+}
 
-/* Terpakai (Krem Gelap/Abu) */
-.room-card.occupied { background: var(--abu-kotak); color: var(--abu-teks); cursor: pointer; }
-.room-card.occupied:hover { background: #DCD3C6; }
-.room-card.occupied .room-status { color: #8A8070; }
+.room-card {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: left; /* Teks rata kiri seperti di foto */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-height: 120px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  outline: none;
+  cursor: pointer; /* Tambahkan cursor pointer di sini */
+}
 
-/* Belum Konfirmasi (Emas) */
-.room-card.unconfirmed { background: var(--emas); color: var(--putih); cursor: pointer; box-shadow: 0 4px 12px rgba(193, 146, 70, 0.2); }
-.room-card.unconfirmed:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(193, 146, 70, 0.3); }
+/* Warna Hijau Tersedia (Sesuai Foto) */
+.room-card.available { 
+  background-color: var(--hijau-tosca); /* Hijau Tosca */
+  color: var(--putih);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.room-card.available:hover { 
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(29, 106, 82, 0.3); 
+}
+
+/* Warna Krem Terpakai (Sesuai Foto) */
+.room-card.occupied { 
+  background-color: #F8F4EE; /* Krem sangat muda */
+  color: #333333;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #E8E0D5;
+}
+
+.room-card.occupied:hover {
+  background-color: #F1E8D9;
+}
+
+/* Warna Emas Belum Konfirmasi */
+.room-card.unconfirmed { 
+  background-color: var(--emas); /* Emas */
+  color: var(--putih);
+  box-shadow: 0 4px 12px rgba(193, 146, 70, 0.2);
+}
+
+.room-card.unconfirmed:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 8px 16px rgba(193, 146, 70, 0.3); 
+}
+
+/* --- STYLE TEKS DI DALAM CARD --- */
+.room-name { 
+  font-size: 1.1rem; 
+  font-weight: 700; 
+  margin-bottom: 8px; 
+  line-height: 1.3;
+}
+
+.room-capacity {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.room-status { 
+  font-size: 0.85rem; 
+  line-height: 1.4; 
+  font-weight: 400;
+  margin-top: auto; /* Mendorong teks status ke bawah jika ada ruang */
+}
+
+.room-status small {
+  display: block;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+
+/* Memperbaiki tampilan teks di card yang terpakai agar lebih terbaca */
+.room-card.occupied .room-status { color: #666; }
+.room-card.occupied .room-status small { color: #888; }
 
 /* ==========================================
    TABEL LIST PEMESANAN
